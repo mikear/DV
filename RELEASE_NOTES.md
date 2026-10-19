@@ -1,5 +1,7 @@
 # DV Patentes CABA v1.0.0
 
+<img src="https://raw.githubusercontent.com/mikear/DV/main/docs/screenshot.png" alt="Aplicación calculando el dígito verificador de AB123CD" width="560">
+
 Calculadora **portátil** del dígito verificador (DV) de patentes de la Ciudad
 Autónoma de Buenos Aires, usado por el sitio de AGIP:
 <https://lb.agip.gob.ar/ConsultaPat/>
@@ -17,6 +19,10 @@ Autónoma de Buenos Aires, usado por el sitio de AGIP:
 - `DISCLAIMER.md` — aviso legal completo.
 - `LICENSE` — MIT.
 - `fuente/` — código fuente completo para auditar y reconstruir el binario.
+
+## Ejemplo
+
+`AB123CD` → **DV 28**. Escribí el dominio, apretá Calcular, copiá el resultado.
 
 ## Características
 
