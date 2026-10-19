@@ -1,0 +1,11 @@
+# release/ y artefactos
+dist/
+*.zip
+
+# Código de AGIP y evidencia privada: NUNCA se publican
+web-scripts/
+evidence/
+
+# Dependencias y basura
+node_modules/
+*.log
