@@ -9,3 +9,6 @@ evidence/
 # Dependencias y basura
 node_modules/
 *.log
+
+# Instrucciones locales de sesiones OpenCode (contienen rutas locales)
+AGENTS.md
