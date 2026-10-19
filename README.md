@@ -1,158 +1,224 @@
-# DV Patentes CABA — calculadora portátil del dígito verificador
+<div align="center">
 
-Herramienta de escritorio, **portátil e instalable en cero pasos**, que calcula
-localmente el dígito verificador (DV) que pide el sitio de AGIP para consultar
-boletas de patentes de la Ciudad Autónoma de Buenos Aires.
+# DV Patentes CABA
 
-- Sitio oficial de consulta: <https://lb.agip.gob.ar/ConsultaPat/>
-- Autoría: **mikear** — <https://github.com/mikear/DV>
-- Licencia: MIT (ver `LICENSE`)
-- **No oficial**: sin afiliación con AGIP. Leé `DISCLAIMER.md` antes de usarla.
+**Calculadora portátil del dígito verificador de patentes de la Ciudad Autónoma de Buenos Aires**
+
+[![Release](https://img.shields.io/github/v/release/mikear/DV?style=flat-square&label=release)](https://github.com/mikear/DV/releases/latest)
+[![Descargas](https://img.shields.io/github/downloads/mikear/DV/total?style=flat-square&label=descargas)](https://github.com/mikear/DV/releases/latest)
+[![Licencia](https://img.shields.io/badge/licencia-MIT-14b8a6?style=flat-square)](LICENSE)
+[![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square)](https://github.com/mikear/DV/releases/latest)
+[![Sin instalación](https://img.shields.io/badge/portable-sin%20instalador-64748b?style=flat-square)](#uso-rápido)
+[![No oficial](https://img.shields.io/badge/estado-no%20oficial%20con%20AGIP-f59e0b?style=flat-square)](DISCLAIMER.md)
+
+<img src="docs/screenshot.png" alt="Captura de la aplicación calculando el dígito verificador de AB123CD" width="560">
+
+Ejecutable único. Cero red. Cero instalación. Código fuente incluido.
+
+[Cómo verificar el archivo](#verificación-y-auditoría) · [El algoritmo](ALGORITMO_DV.md) · [Aviso legal](DISCLAIMER.md)
+
+</div>
+
+---
+
+## Índice
+
+- [Qué hace](#qué-hace)
+- [Inicio rápido](#inicio-rápido)
+- [Uso](#uso)
+- [Formatos aceptados](#formatos-aceptados)
+- [El algoritmo](#el-algoritmo)
+- [Verificación y auditoría](#verificación-y-auditoría)
+- [Privacidad](#privacidad)
+- [Sobre los antivirus](#sobre-los-antivirus)
+- [Aviso legal](#aviso-legal)
+- [Contribuir](#contribuir)
+- [Licencia](#licencia)
 
 ## Qué hace
 
-El sitio de AGIP exige el DV para mostrar los datos del titular del vehículo.
-El DV es una operación aritmética pura (tabla de letras + suma por paridad +
-raíz digital) que este programa reproduce 1:1, **sin conexión a internet, sin
-enviar datos y sin instalar nada**.
+El sitio de [AGIP](https://lb.agip.gob.ar/ConsultaPat/) pide un **dígito verificador**
+para mostrar los datos de una patente. Este programa lo calcula en tu computadora,
+sin conexión a internet y sin instalar nada.
 
-```
-┌──────────────────────────────────────────────┐
-│  DV Patentes CABA                            │
-│  DOMINIO (PATENTE)   [ QQ999QQ ] [⧉] [Calcular]│
-│  DIGITO VERIFICADOR  [   99     ] [⧉] [Copiar] │
-│  ✓ Formato valido: copia "99" en el sitio AGIP. │
-│  USALO EN EL SITIO  ↗ Abrir lb.agip.gob.ar/ConsultaPat/ │
-└──────────────────────────────────────────────┘
-```
+| | |
+|---|---|
+| **Sin red** | No abre conexiones, no envía ni recolecta datos. |
+| **Sin instalación** | Es un `.exe` portátil: no muestra asistente, no deja nada en el sistema, no hay desinstalador. |
+| **Sin procesos externos** | El portapapeles se maneja con API nativa de Win32. No invoca `cmd` ni `powershell`. |
+| **Con auditoría** | Trae el código fuente, los vectores de prueba y la documentación del algoritmo. |
+| **Con autotest** | Antes de abrir la ventana corre 432 casos de prueba; si algo falla, no abre. |
 
-## Descarga y verificación
+## Inicio rápido
 
-1. Bajá `dv-caba-portable.exe` desde la release.
-2. Verificá el hash antes de ejecutarlo:
+1. Descargá [`dv-caba-portable.exe`](https://github.com/mikear/DV/releases/latest) desde la última release.
+2. Verificá el hash y ejecutalo. No hace falta instalar nada.
+3. Escribí el dominio, apretá **Calcular** y copiá el resultado.
 
-```powershell
-Get-FileHash .\dv-caba-portable.exe -Algorithm SHA256
-```
-
-Comparalo con el valor de `SHA256SUMS.txt` incluido en la release. Si no
-coincide, **no lo ejecutes**.
+¿Prefieres no descargar nada? Pegá `snippet-consola.js` en la consola del
+navegador con el sitio de AGIP abierto y te completa el campo solo.
 
 ## Uso
 
 ### Interfaz gráfica
 
-Abrí el `.exe`. Escribí el dominio, apretá **Calcular**, y copiá el resultado
-con el icono de la derecha o con **Copiar resultado**. También podés copiar el
-dominio con el icono de al lado del campo. El enlace inferior abre el sitio
-oficial en tu navegador.
+Abrí el `.exe`, escribí el dominio y apretá **Calcular**. El resultado aparece
+en grande, con dos accesos rápidos: el icono de copia junto al dominio y el
+botón **Copiar resultado**. El enlace inferior abre el sitio oficial.
 
 ### Línea de comandos
 
-```
+```text
 dv-caba.exe                     -> abre la app
-dv-caba.exe QQ999QQ             -> app con el dominio precargado
-dv-caba.exe QQ999QQ C:\r.txt    -> escribe "DV=99" y sale, exit 0 (ok) / 2 (error)
-dv-caba.exe --copy 99           -> copia al portapapeles, exit 0 / 2
+dv-caba.exe AB123CD             -> app con el dominio precargado
+dv-caba.exe AB123CD C:\r.txt    -> escribe "DV=28" y sale (exit 0 = ok, 2 = error)
+dv-caba.exe --copy 28           -> copia al portapapeles (exit 0 = ok, 2 = error)
 ```
 
-Un argumento que empieza con `/` nunca se interpreta como archivo de salida,
-así que podés usar `/LOG=` de Inno sin que se rompa nada.
+Un argumento que empieza con `/` nunca se interpreta como archivo de salida.
 
-### Consola del navegador (en la página de AGIP)
+### Consola del navegador
 
-Si preferís no salir del sitio, pegá `snippet-consola.js` en la consola
-del navegador con la página abierta: rellena el campo del DV con el resultado.
+Con el sitio de AGIP abierto, pegá el contenido de
+[`snippet-consola.js`](snippet-consola.js) en la consola (F12). Calcula el DV
+del campo y lo escribe en el formulario.
 
-### Versión de referencia en Node
+### Versión en Node
 
 ```bash
-node dv.js QQ999QQ          # => DV: 99
-node dv.js QQ999QQ AB123CD ABC123
+node dv.js AB123CD          # => DV: 28
+node dv.js AB123CD ABC123 A1234567
 ```
 
 ## Formatos aceptados
 
-Auto vieja `A1234567` · auto nueva `ABC123` · moto nueva `123ABC` ·
-auto Mercosur `QQ999QQ` · moto Mercosur `A123BCD`.
+| Tipo | Estructura | Ejemplo | DV |
+|---|---|---|---|
+| Auto Mercosur | 2 letras · 3 dígitos · 2 letras | `QQ999QQ` | 99 |
+| Auto nueva | 3 letras · 3 dígitos | `AB123CD` | 28 |
+| Auto vieja | 1 letra · 7 dígitos | `A1234567` | 73 |
+| Moto Mercosur | 1 letra · 3 dígitos · 3 letras | `A123BCD` | 37 |
+| Moto nueva | 3 dígitos · 3 letras | `123ABC` | 93 |
 
-## Algoritmo
+## El algoritmo
 
-La reconstrucción completa está en [`ALGORITMO_DV.md`](ALGORITMO_DV.md), con el
-paso a paso, un ejemplo trabajado, las particularidades del original y los IDs
-de evidencia. Resumen:
+El dígito verificador es una operación aritmética pura: tabla de letras,
+suma por paridad e iteración de raíz digital.
 
-1. Mayúsculas.
-2. Sustitución de letras por tabla (`A=14 … Z=17`, `espacio=60`); en formato
-   vieja las letras pasan a `00`.
-3. Control de longitud: debe haber una racha de 9 a 11 dígitos.
-4. Suma por paridad de índices (par → `a`, impar → `b`) sobre la cadena ya
-   sustituida.
-5. Raíz digital de `a` y de `b`.
-6. `DV = parseInt(a ++ b)`.
+```text
+AB123CD
+  → sustituir letras por la tabla (A=14, B=01, C=00)   "140112300"
+  → sumar por paridad de índices                        a=…  b=…
+  → raíz digital de cada suma                           2  y  8
+  → concatenar                                          DV = 28
+```
 
-## Auditoría y reproducibilidad
+La reconstrucción completa, con ejemplo trabajado, particularidades del
+original, IDs de evidencia y limitaciones está en
+[**ALGORITMO_DV.md**](ALGORITMO_DV.md).
 
-Este paquete incluye el código fuente para que puedas verificar que el binario
-no hace nada raro:
+## Verificación y auditoría
 
-- `fuente/dv-caba.iss` — script de Inno Setup 6 que genera el `.exe`. La GUI es
-  Pascal Script nativo; **no ejecuta procesos externos** (el portapapeles se
-  maneja con API de Win32: `user32`/`kernel32`).
-- `fuente/dv.js` — implementación de referencia del algoritmo.
-- `fuente/test-paridad.js` — batería de 432 casos / 1282 comprobaciones.
-- `ALGORITMO_DV.md`, `DISCLAIMER.md`, `LICENSE`.
+Este proyecto existe para ser auditable. Tres formas de verificarlo:
 
-Para reconstruir el binario necesitás [Inno Setup 6](https://jrsoftware.org/isinfo.php):
+**1. Por hash**
+
+```powershell
+Get-FileHash .\dv-caba-portable.exe -Algorithm SHA256
+```
+
+Comparalo con `SHA256SUMS.txt`, incluido en la release y en el paquete.
+
+**2. Reconstruyendo el binario**
+
+Necesitás [Inno Setup 6](https://jrsoftware.org/isinfo.php):
 
 ```powershell
 iscc.exe fuente\dv-caba.iss
 ```
 
-Para correr los tests:
+**3. Corriendo los tests**
 
 ```bash
-node test-paridad.js
+node test-paridad.js     # 432 casos / 1282 comprobaciones
 ```
 
-### Qué NO incluye el paquete
+### Qué incluye el paquete
 
-No incluye el JavaScript original de AGIP (es código de terceros) ni ningún
-archivo de evidencia. El test corre contra vectores dorados congelados, que
-fueron generados y verificados contra el original en el entorno privado de
-ingeniería inversa.
+```text
+dv-caba-portable-osint/
+├── dv-caba-portable.exe     ejecutable portátil
+├── SHA256SUMS.txt           hash de cada archivo
+├── README.md                este documento
+├── ALGORITMO_DV.md          reconstrucción del algoritmo
+├── DISCLAIMER.md            aviso legal completo
+├── LICENSE                  MIT
+└── fuente/                  código fuente para auditar
+    ├── dv-caba.iss          script de Inno Setup 6
+    ├── dv.js                implementación de referencia
+    ├── test-paridad.js      batería de pruebas
+    └── snippet-consola.js   utilidad para el navegador
+```
 
-## Nota sobre antivirus (McAfee / SmartScreen)
-
-Algunos antivirus señalan binarios desconocidos, sin firmar y empaquetados con
-heurística en la nube. Es un **falso positivo** típico (`Artemis!`), no una
-detección de comportamiento malicioso. El binario no hace red, no ejecuta
-procesos y no instala nada: podés verificarlo con el hash y reconstruyéndolo
-desde la fuente.
-
-Recomendaciones:
-
-- Para pedir la revisión del falso positivo:
-  [Microsoft Security Intelligence](https://www.microsoft.com/wdsi/filesubmission)
-  y [McAfee Threat Submission](https://www.mcafee.com/us/consumer-support/other-threats/false-positive-reporting.html).
-- **No subas el archivo a VirusTotal** antes de ese trámite: VT comparte las
-  muestras con todos los fabricantes y puede consolidar la detección en vez de
-  levantarla.
-- La solución definitiva es firmar el ejecutable con un certificado OV/EV.
+**Qué no incluye**: el JavaScript original de AGIP (es código de terceros) ni
+archivos de evidencia. Los tests corren contra vectores dorados congelados,
+generados y verificados contra el original en el entorno privado.
 
 ## Privacidad
 
 - No abre conexiones de red.
 - No recolecta ni envía datos.
-- No escribe en el registro ni instala nada; es un ejecutable portátil.
-- El resultado se calcula en tu máquina a partir del texto que tipeás.
+- No escribe en el registro de Windows ni instala nada.
+- El resultado se calcula localmente a partir del texto que tipeás.
+
+## Sobre los antivirus
+
+Algunos antivirus señalan binarios desconocidos, sin firmar y empaquetados con
+heurística en la nube. Es un **falso positivo** típico, no una detección de
+comportamiento: el binario no hace red, no ejecuta procesos y no instala nada.
+
+Si tu antivirus lo bloquea:
+
+- Verificá el hash contra `SHA256SUMS.txt`.
+- Reconstruí el ejecutable desde `fuente/dv-caba.iss` y compará.
+- Pedí la revisión en [Microsoft Security Intelligence](https://www.microsoft.com/wdsi/filesubmission)
+  o en [McAfee Threat Submission](https://www.mcafee.com/us/consumer-support/other-threats/false-positive-reporting.html).
+- **No lo subas a VirusTotal** antes de ese trámite: VT comparte las muestras
+  con todos los fabricantes y puede consolidar la detección en vez de levantarla.
 
 ## Aviso legal
 
-Herramienta no oficial, sin afiliación con AGIP. El DV es informativo: AGIP
-expresa que su consulta "carece de valor documental alguno". Al aportar el DV,
-el sitio puede devolver datos personales del titular (nombre y dirección), por
-lo que este software debe usarse **sólo con fines lícitos** y conforme a la
-Ley 25.326 de Protección de Datos Personales.
+> **Herramienta no oficial, sin afiliación con AGIP.** El DV es informativo:
+> AGIP expresa que su consulta "carece de valor documental alguno".
 
-Texto completo en [`DISCLAIMER.md`](DISCLAIMER.md).
+Hay un punto que conviene tener presente. AGIP advierte en su sitio:
+
+> "Por resguardo del secreto fiscal, las boletas obtenidas sin dígito
+> verificador no contendrán los datos del contribuyente (nombre y dirección)."
+
+Es decir: al aportar el DV, el sitio puede devolver **datos personales de una
+persona**. Usá esta herramienta **sólo con fines lícitos** y propios, y conforme
+a la Ley 25.326 de Protección de Datos Personales.
+
+Texto completo en [**DISCLAIMER.md**](DISCLAIMER.md).
+
+## Contribuir
+
+Todo aporte es bienvenido: reportes de error, correcciones del algoritmo ante
+cambios de AGIP, mejoras de la GUI o traducciones.
+
+- Reportá bugs con la [plantilla de problemas](https://github.com/mikear/DV/issues/new/template/bug_report.yml).
+- Leé [CONTRIBUTING.md](CONTRIBUTING.md) antes de mandar un pull request.
+- Encontraste una vulnerabilidad? No abras un issue público: ver [SECURITY.md](SECURITY.md).
+
+## Licencia
+
+Distribuido bajo [licencia MIT](LICENSE). Copyright (C) 2026 mikear.
+
+<div align="center">
+
+Si te sirvió, dejá una estrella
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mikear/DV&type=Date)](https://star-history.com/#mikear/DV&Date)
+
+</div>

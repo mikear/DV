@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Vulnerabilidad de seguridad
+    url: https://github.com/mikear/DV/security/advisories/new
+    about: Reportá vulnerabilidades de forma privada, no abras un issue público.
+  - name: Detección de antivirus
+    url: https://github.com/mikear/DV#sobre-los-antivirus
+    about: Si tu antivirus bloquea el .exe, leé esto antes de reportar.
+  - name: Algoritmo y su documentación
+    url: https://github.com/mikear/DV/blob/main/ALGORITMO_DV.md
+    about: Cómo se calcula el dígito verificador, paso a paso.

@@ -1,0 +1,33 @@
+name: Sugerencia o mejora
+description: Proponé una función o una mejora
+title: "[Sugerencia] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: ¿Qué problema resuelve?
+      placeholder: "Tengo que calcular el DV de varios dominios a la vez"
+    validations:
+      required: true
+  - type: textarea
+    id: solucion
+    attributes:
+      label: ¿Cómo te imaginás la solución?
+      placeholder: "Un modo para pasar una lista de dominios en un archivo"
+    validations:
+      required: true
+  - type: dropdown
+    id: alternativas
+    attributes:
+      label: ¿Pensaste en otra alternativa?
+      options:
+        - Sí, la describo abajo
+        - No
+    validations:
+      required: true
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: "Cuanto más contexto, mejor. Evitá publicar datos personales o patentes reales."

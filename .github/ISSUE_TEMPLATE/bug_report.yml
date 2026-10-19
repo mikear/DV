@@ -1,0 +1,78 @@
+name: Reportar un bug
+description: Algo no funciona como debería
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomar el tiempo de reportar. Antes de continuar, revisá
+        [README](https://github.com/mikear/DV#sobre-los-antivirus): si es una
+        detección de antivirus, no es un bug.
+  - type: dropdown
+    id: componente
+    attributes:
+      label: ¿Dónde ocurre?
+      options:
+        - Interfaz gráfica del .exe
+        - Línea de comandos
+        - Script de Node (dv.js)
+        - Snippet de consola del navegador
+        - Documentación
+    validations:
+      required: true
+  - type: input
+    id: dominio
+    attributes:
+      label: Dominio de prueba
+      description: "Usá un dominio sintético, por ejemplo AB123CD. No publiques patentes reales."
+      placeholder: "AB123CD"
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué esperabas
+      placeholder: "Que calcule el DV correctamente"
+    validations:
+      required: true
+  - type: textarea
+    id: real
+    attributes:
+      label: Qué pasó
+      placeholder: "Muestra error de formato con un dominio válido"
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      value: |
+        1. Abro el ejecutable
+        2. Escribo ...
+        3. Apreto Calcular
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión
+      description: "Propiedades del archivo → Detalles. También podés pegar el hash SHA-256."
+      placeholder: "v1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: sistema
+    attributes:
+      label: Sistema operativo
+      placeholder: "Windows 11 23H2"
+    validations:
+      required: true
+  - type: checkboxes
+    id: antivirus
+    attributes:
+      label: Comprobaciones
+      options:
+        - label: Verifiqué el hash SHA-256 contra SHA256SUMS.txt
+        - label: Corrí `node test-paridad.js` y pasó
+        - label: El problema no es una detección de antivirus
