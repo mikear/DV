@@ -21,7 +21,7 @@ de Buenos Aires. Sin instalación, sin conexiones propias y sin enviar datos.
 [![Licencia](https://img.shields.io/badge/licencia-MIT-14b8a6?style=flat-square)](LICENSE)
 [![No oficial](https://img.shields.io/badge/estado-no%20oficial%20con%20AGIP-f59e0b?style=flat-square)](DISCLAIMER.md)
 
-<img src="docs/screenshot.png" alt="Captura de la aplicación calculando el dígito verificador de AB123CD" width="560">
+<a href="docs/screenshot.png" title="Abrir la captura completa"><img src="docs/screenshot.png" alt="Captura de la aplicación calculando el dígito verificador de AB123CD" width="560"></a>
 
 **Windows 10/11** · **~1,6 MB** · **Portable** · **Código fuente incluido**
 
