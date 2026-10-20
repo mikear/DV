@@ -21,9 +21,9 @@ de Buenos Aires. Sin instalación, sin conexiones propias y sin enviar datos.
 [![Licencia](https://img.shields.io/badge/licencia-MIT-14b8a6?style=flat-square)](LICENSE)
 [![No oficial](https://img.shields.io/badge/estado-no%20oficial%20con%20AGIP-f59e0b?style=flat-square)](DISCLAIMER.md)
 
-<a href="docs/screenshot.png" title="Abrir la captura completa"><img src="docs/screenshot.png" alt="Captura de la aplicación calculando el dígito verificador de AB123CD" width="560"></a>
+<a href="docs/screenshot.png" title="Abrir la captura completa"><img src="docs/screenshot.png" alt="Captura de la aplicación con la chapa AB 123 CD dibujada y el DV 28" width="560"></a>
 
-**Windows 10/11** · **~1,6 MB** · **Portable** · **Código fuente incluido**
+**Windows 10/11** · **~4,2 MB** · **Portable** · **Código fuente incluido**
 
 [Descargar](#descarga) · [Verificación](#verificación-y-auditoría) · [El algoritmo](#el-algoritmo) · [Aviso legal](DISCLAIMER.md)
 
@@ -78,6 +78,8 @@ localmente: no consulta el sitio, no automatiza trámites y no envía datos.
   El loader de Inno ejecuta una copia temporal del propio binario.
 - **Con auditoría**: incluye el código fuente, los vectores de prueba y la
   documentación del algoritmo.
+- **Con la chapa dibujada**: la ventana muestra la patente del dominio
+  consultado en el estilo correcto; el arte viaja embebido en el `.exe`.
 - **Con autotest**: antes de abrir la ventana (y antes del modo archivo) corre un
   autotest de humo que cubre las 26 letras y casos negativos. La batería completa
   de 432 casos está en `test-paridad.js`.
@@ -88,8 +90,10 @@ localmente: no consulta el sitio, no automatiza trámites y no envía datos.
 
 Abrí el `.exe`, escribí el dominio y apretá **Calcular**. El resultado aparece
 en grande, con dos accesos rápidos: el icono de copia junto al dominio y el
-botón **Copiar resultado**. Los enlaces inferiores abren el sitio oficial y el
-repositorio del proyecto.
+botón **Copiar resultado**. Debajo, la sección **Chapa del dominio** dibuja la
+patente con el arte que le corresponde al formato (vieja, nacional, Mercosur o
+moto). Los enlaces inferiores abren el sitio oficial y el repositorio del
+proyecto.
 
 ### Línea de comandos
 
@@ -125,6 +129,9 @@ node dv.js AB123CD ABC123 A1234567
 | Moto Mercosur | 1 letra · 3 dígitos · 3 letras | `A123BCD` | 37 |
 | Moto nueva | 3 dígitos · 3 letras | `123ABC` | 93 |
 
+Con formato válido, la ventana dibuja la chapa en el estilo de la fila
+correspondiente; con formato inválido, la sección queda oculta.
+
 ## El algoritmo
 
 El dígito verificador es una operación aritmética pura: tabla de letras,
@@ -156,7 +163,7 @@ Comparalo con `SHA256SUMS.txt`, incluido en la release y en el paquete.
 
 **2. Reconstruyendo el binario**
 
-Necesitás [Inno Setup 6](https://jrsoftware.org/isinfo.php):
+Necesitás [Inno Setup 7](https://jrsoftware.org/isinfo.php):
 
 ```powershell
 iscc.exe dv-caba.iss
@@ -191,14 +198,15 @@ dv-caba-portable-osint/
 ├── DISCLAIMER.md            aviso legal completo
 ├── LICENSE                  MIT
 └── fuente/                  código fuente para auditar
-    ├── dv-caba.iss          script de Inno Setup 6
+    ├── dv-caba.iss          script de Inno Setup 7
     ├── dv.js                implementación de referencia
     ├── test-paridad.js      batería de pruebas
     ├── snippet-consola.js   utilidad para el navegador
     └── iconos/              icono y recursos que usa el .iss
         ├── dv-caba.ico
         ├── preview-64.png
-        └── accent-teal.png
+        ├── accent-teal.png
+        └── chapas/          arte de las patentes (fondos y glifos)
 ```
 
 **Qué no incluye**: el JavaScript original de AGIP (es código de terceros) ni

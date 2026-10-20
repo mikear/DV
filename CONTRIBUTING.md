@@ -44,7 +44,7 @@ node test-paridad.js       # debe pasar antes de tocar nada
 
 | Archivo | Qué hay |
 |---|---|
-| `dv-caba.iss` | Script de Inno Setup 6: CLI, GUI en Pascal Script, Win32. |
+| `dv-caba.iss` | Script de Inno Setup 7: CLI, GUI en Pascal Script, Win32. |
 | `dv.js` | Implementación de referencia del algoritmo. |
 | `test-paridad.js` | Batería de 432 casos y vectores dorados. |
 | `snippet-consola.js` | Utilidad para la consola del navegador. |
@@ -53,7 +53,7 @@ node test-paridad.js       # debe pasar antes de tocar nada
 
 ## Compilar el ejecutable
 
-Necesitás [Inno Setup 6](https://jrsoftware.org/isinfo.php):
+Necesitás [Inno Setup 7](https://jrsoftware.org/isinfo.php):
 
 ```powershell
 iscc.exe dv-caba.iss

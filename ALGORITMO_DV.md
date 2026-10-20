@@ -152,3 +152,29 @@ node tools/embed-golden.js embed
 El `.exe` portátil ejecuta un autotest de humo (las 26 letras y casos
 negativos) antes de abrir la GUI y antes del modo archivo; la batería completa
 de 432 casos es la de `test-paridad.js`.
+
+## 8. La chapa del dominio en la app
+
+Desde la versión 1.1.0, la ventana dibuja la patente del dominio consultado.
+La placa es **decorativa** (no interviene en el cálculo del DV):
+
+- **Arte**: 5 fondos (`bg-vieja`, `bg-nacional`, `bg-mercosur`,
+  `bg-moto-nacional`, `bg-moto-mercosur`) y glifos individuales por estilo:
+  letras y dígitos con relieve, en PNG con transparencia. Viven en
+  `iconos/chapas/` del repositorio y en `fuente/iconos/chapas/` del paquete.
+- **Métricas**: avances, offsets y tamaños de cada glifo están en constantes
+  CSV de `iconos/chapas/chapas-layout.iss`, incluido por el script de Inno
+  Setup. La unidad es la centésima de placa (1/100 de la placa base).
+- **Render**: en tiempo de ejecución el `.iss` extrae los PNG a `{tmp}`
+  (`ExtractTemporaryFile`) y los pinta en `TBitmapImage` con alfa sobre el
+  fondo; tras cerrar la app Inno limpia el temporal. No hay red ni procesos
+  externos en ningún punto.
+- **Estilos**: la forma del dominio (largo y posición de letras/dígitos)
+  selecciona el fondo y el armado: vieja (letra grande + millón + 6 dígitos),
+  nacional (letras+dígitos), Mercosur (2 grupos laterales + dígitos centrales)
+  y las dos de moto en formato de dos filas.
+- **Procedencia**: el arte es una reimplementación propia del diseño de las
+  chapas argentinas (banda azul Pantone 286, guilloché, tipografía con
+  relieve), generada con un exportador a PNG. El generador no es parte del
+  paquete público; los PNG resultantes sí viajan para poder reconstruir y
+  auditar el binario.

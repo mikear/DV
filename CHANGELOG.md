@@ -7,6 +7,29 @@ y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-20
+
+### Agregado
+
+- **Chapa del dominio**: la app dibuja la patente del dominio consultado,
+  en el estilo correcto según el formato:
+  - vieja (`A1234567`): placa negra con letra grande y fila de dígitos;
+  - nacional (`ABC123`): placa blanca con banda y garantía;
+  - moto nacional (`123ABC`) y moto Mercosur (`A123BCD`): placa chica de moto;
+  - Mercosur (`AB123CD`, `QQ999QQ`): placa argentina con banda azul y guilloché.
+- El arte viaja embebido en el `.exe` (fondos y glifos PNG con transparencia,
+  generados con un exportador propio a partir del renderizador de `PlateCanvas`
+  azulado Pantone 286) y se pinta en la ventana sin red, sin dependencias y
+  sin procesos externos.
+- Con formato inválido la sección de chapa queda oculta y no se calcula DV.
+
+### Cambios
+
+- **Ventana más alta** para alojar la nueva sección (la captura pasa a
+  560×619 en `docs/screenshot.png`).
+- El binario crece de ~2 MB a ~3,2 MB por el arte de las chapas incluido.
+- Compilación con Inno Setup 7 (antes 6); la GUI sigue siendo Pascal Script.
+
 ## [1.0.3] - 2026-10-20
 
 ### Interfaz

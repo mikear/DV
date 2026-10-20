@@ -28,7 +28,7 @@
 ; ============================================================================
 
 #define AppName "DV Patentes CABA"
-#define AppVersion "1.0.3"
+#define AppVersion "1.1.0"
 #define OutputName "dv-caba"
 #define Autor "mikear"
 #define RepoURL "https://github.com/mikear/DV"
@@ -75,8 +75,12 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 [Files]
 Source: "iconos\preview-64.png"; DestDir: "{tmp}"; Flags: dontcopy noencryption
 Source: "iconos\accent-teal.png"; DestDir: "{tmp}"; Flags: dontcopy noencryption
+; Arte de chapas (fondos + glifos por estilo). Las muestras de QA no viajan.
+Source: "iconos\chapas\*.png"; Excludes: "muestra-*.png"; DestDir: "{tmp}"; Flags: dontcopy noencryption
 
 [Code]
+#include "iconos\chapas\chapas-layout.iss"
+
 const
   { Tabla de letras del original. A=14 B=01 C=00 ... Z=17 }
   LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -94,9 +98,21 @@ const
   GLIFO_ABRIR  = #$E8A7;   { open in new window }
   GLIFO_LINK   = #$E71B;   { link }
 
+  { tamano del recuadro de la chapa, en px logicos }
+  CHAPA_BOX_ALTO = 139;
+
 var
   AppForm: TForm;
   Acento, IconoApp: TBitmapImage;
+  ChapaBg: TBitmapImage;
+  ChapaG1, ChapaG2, ChapaG3, ChapaG4: TBitmapImage;
+  ChapaG5, ChapaG6, ChapaG7, ChapaG8: TBitmapImage;
+  ChapaExtraidos: TStringList;
+  LblChapa: TNewStaticText;
+  { geometria del render actual de la chapa: escala (px de pantalla por
+    unidad de placa) y origen del PNG de fondo }
+  ChapaS: Extended;
+  ChapaOx, ChapaOy: Integer;
   LblSec1, LblSec2, LblSec3: TNewStaticText;
   LblCopiarDom, LblLinkIcon, LblEstadoIcon: TNewStaticText;
   LblEstado, LblLink, LblAyuda, LblAviso: TNewStaticText;
@@ -188,10 +204,6 @@ begin
   Result := (V * Dpi + 48) div 96;
 end;
 
-{ ---------------------------------------------------------------------- }
-{ Utilidades                                                              }
-{ ---------------------------------------------------------------------- }
-
 function EsLetra(C: Char): Boolean;
 begin
   Result := (C >= 'A') and (C <= 'Z');
@@ -201,6 +213,305 @@ function EsDigito(C: Char): Boolean;
 begin
   Result := (C >= '0') and (C <= '9');
 end;
+
+{ ---------------------------------------------------------------------- }
+{ Chapa del dominio: render con overlay de PNGs (+BOM layout generado por }
+{ ExportarChapas.java de patentes-javafx). Coordenadas en los comentarios }
+{ son de placa a escala 1, igual que PlateCanvas.java.                    }
+{ ---------------------------------------------------------------------- }
+
+{ Devuelve el token Indice (0-based) de una lista CSV de enteros. }
+function TokensCsv(const Csv: String; Indice, ValorDef: Integer): Integer;
+var
+  I, P: Integer;
+  Tok: String;
+begin
+  Tok := Csv;
+  for I := 0 to Indice - 1 do begin
+    P := Pos(',', Tok);
+    if P > 0 then
+      Tok := Copy(Tok, P + 1, MaxInt)
+    else begin
+      Tok := '';
+      Break;
+    end;
+  end;
+  P := Pos(',', Tok);
+  if P > 0 then
+    Tok := Copy(Tok, 1, P - 1);
+  Tok := Trim(Tok);
+  if Tok = '' then
+    Result := ValorDef
+  else
+    Result := StrToIntDef(Tok, ValorDef);
+end;
+
+{ Indice de glifo: A..Z = 0..25, 0..9 = 26..35 (orden de los CSV generados). }
+function IndiceGlifo(const C: Char): Integer;
+begin
+  if (C >= 'A') and (C <= 'Z') then
+    Result := Ord(C) - Ord('A')
+  else
+    Result := 26 + (Ord(C) - Ord('0'));
+end;
+
+{ Indice de dígito solo (0..9): los CSV de vieja-m y vieja-d tienen 10
+  entradas indexadas por dígito, a diferencia de los conjuntos de 36. }
+function IndiceDigito(const C: Char): Integer;
+begin
+  Result := Ord(C) - Ord('0');
+end;
+
+{ Nombre de archivo del tile: letras A.png, digitos d5.png. }
+function NombreGlifo(const Conjunto: String; const C: Char): String;
+begin
+  if (C >= '0') and (C <= '9') then
+    Result := 'g-' + Conjunto + '-d' + C + '.png'
+  else
+    Result := 'g-' + Conjunto + '-' + C + '.png';
+end;
+
+{ Extrae un PNG al directorio temporal una sola vez por proceso. }
+procedure ExtraerTmp(const Nombre: String);
+begin
+  if ChapaExtraidos.IndexOf(Nombre) < 0 then begin
+    ExtractTemporaryFile(Nombre);
+    ChapaExtraidos.Add(Nombre);
+  end;
+end;
+
+procedure OcultarChapa;
+begin
+  ChapaBg.Visible := False;
+  ChapaG1.Visible := False;
+  ChapaG2.Visible := False;
+  ChapaG3.Visible := False;
+  ChapaG4.Visible := False;
+  ChapaG5.Visible := False;
+  ChapaG6.Visible := False;
+  ChapaG7.Visible := False;
+  ChapaG8.Visible := False;
+end;
+
+{ Coloca un glifo.
+  Conjunto:  1=VJL 2=VJM 3=VJD 4=NAC 5=MTN 6=MSR 7=MTM (consts de layout).
+  Idx:       IndiceGlifo(C).
+  XU:        centro de la celda (Centrado) o ancla izquierda del texto
+             (Vieja), en unidades de placa.
+  BU:        baseline de la celda, en unidades de placa.
+  YO/TW/TH:  constantes CSV del layout; XO solo para los conjuntos vieja. }
+procedure PonerGlifo(Slot: TBitmapImage; Conjunto: Integer; const Archivo: String;
+  Idx: Integer; const XU, BU: Extended; Centrado: Boolean);
+var
+  StrA, StrX, StrY, StrW, StrH: String;
+  TW_, TH_, YOs, XOs: Integer;
+  X, Y, Wd, Hd: Integer;
+begin
+  case Conjunto of
+    1: begin
+         StrA := CHAPA_VJL_ADV; StrX := CHAPA_VJL_XO; StrY := CHAPA_VJL_YO;
+         StrW := CHAPA_VJL_TW;  StrH := CHAPA_VJL_TH;
+       end;
+    2: begin
+         StrA := CHAPA_VJM_ADV; StrX := CHAPA_VJM_XO; StrY := CHAPA_VJM_YO;
+         StrW := CHAPA_VJM_TW;  StrH := CHAPA_VJM_TH;
+       end;
+    3: begin
+         StrA := CHAPA_VJD_ADV; StrX := CHAPA_VJD_XO; StrY := CHAPA_VJD_YO;
+         StrW := CHAPA_VJD_TW;  StrH := CHAPA_VJD_TH;
+       end;
+    4: begin
+         StrA := CHAPA_NAC_ADV; StrX := ''; StrY := CHAPA_NAC_YO;
+         StrW := CHAPA_NAC_TW;  StrH := CHAPA_NAC_TH;
+       end;
+    5: begin
+         StrA := CHAPA_MTN_ADV; StrX := ''; StrY := CHAPA_MTN_YO;
+         StrW := CHAPA_MTN_TW;  StrH := CHAPA_MTN_TH;
+       end;
+    6: begin
+         StrA := CHAPA_MSR_ADV; StrX := ''; StrY := CHAPA_MSR_YO;
+         StrW := CHAPA_MSR_TW;  StrH := CHAPA_MSR_TH;
+       end;
+    7: begin
+         StrA := CHAPA_MTM_ADV; StrX := ''; StrY := CHAPA_MTM_YO;
+         StrW := CHAPA_MTM_TW;  StrH := CHAPA_MTM_TH;
+       end;
+  else
+    Exit;
+  end;
+  TW_ := TokensCsv(StrW, Idx, 0);
+  TH_ := TokensCsv(StrH, Idx, 0);
+  YOs := TokensCsv(StrY, Idx, 0);
+  { ojo: divisor de enteros trunca en este Pascal Script; los factores
+    flotantes 0.01/0.005 equivalen a /100 y /200 en unidades de placa }
+  if Centrado then
+    X := ChapaOx + Round((XU - TW_ * 0.005) * ChapaS)
+  else begin
+    XOs := TokensCsv(StrX, Idx, 0);
+    X := ChapaOx + Round((XU + XOs * 0.01) * ChapaS);
+  end;
+  Y := ChapaOy + Round((BU + YOs * 0.01) * ChapaS);
+  Wd := Round(TW_ * 0.01 * ChapaS);
+  Hd := Round(TH_ * 0.01 * ChapaS);
+  ExtraerTmp(Archivo);
+  Slot.PngImage.LoadFromFile(ExpandConstant('{tmp}\') + Archivo);
+  Slot.Left := X;
+  Slot.Top := Y;
+  Slot.Width := Wd;
+  Slot.Height := Hd;
+  Slot.Visible := True;
+end;
+
+{ Devuelve el slot N (1..8). }
+function ChapaSlotPorNum(N: Integer): TBitmapImage;
+begin
+  case N of
+    1: Result := ChapaG1;
+    2: Result := ChapaG2;
+    3: Result := ChapaG3;
+    4: Result := ChapaG4;
+    5: Result := ChapaG5;
+    6: Result := ChapaG6;
+    7: Result := ChapaG7;
+    8: Result := ChapaG8;
+  else
+    Result := ChapaG1;
+  end;
+end;
+
+{ Coloca un grupo centrado de caracteres (Desde..Hasta) en un conjunto
+  de glifos con recorte centrado (NAC/MTN/MSR/MTM). La tinta queda
+  centrada en la celda: cellC = CXu - total/2 + sum(prev) + adv_i/2.
+  Los slots quedan numerados por posicion absoluta del caracter. }
+procedure GrupoCentrado(const Dom: String; const AAdv: String;
+  CXu, BU: Extended; Desde, Hasta: Integer; Conjunto: Integer;
+  const NomArch: String);
+var
+  Q, Idx, Tok, TokTotal: Integer;
+  P: Extended;
+begin
+  TokTotal := 0;
+  for Q := Desde to Hasta do
+    TokTotal := TokTotal + TokensCsv(AAdv, IndiceGlifo(Dom[Q]), 0);
+  P := 0;
+  for Q := Desde to Hasta do begin
+    Idx := IndiceGlifo(Dom[Q]);
+    Tok := TokensCsv(AAdv, Idx, 0);
+    PonerGlifo(ChapaSlotPorNum(Q), Conjunto, NombreGlifo(NomArch, Dom[Q]), Idx,
+      CXu - TokTotal * 0.005 + P + Tok * 0.005, BU, True);
+    P := P + Tok * 0.01;
+  end;
+end;
+
+{ Renderiza la chapa del dominio ya validado. Geometria copiada de
+  PlateCanvas.java (los coeficientes son los mismos del dibujo original). }
+procedure MostrarChapa(const Dom: String);
+var
+  L, M, Q, BoxW: Integer;
+  WP, HP: Integer;
+  Sn, Sh, B, X0, X1, P: Extended;
+  Idx: Integer;
+  BgArch: String;
+begin
+  L := Length(Dom);
+  if (L < 6) or (L > 8) then begin
+    OcultarChapa;
+    Exit;
+  end;
+  OcultarChapa;
+
+  M := Sc(14);
+  BoxW := AppForm.ClientWidth - 2 * M;
+
+  { dimensiones de la placa (unidades 1/100 = px a escala 1) y estilo }
+  if L = 8 then begin
+    WP := 780; HP := 230;
+    BgArch := 'bg-vieja.png';
+  end else if (L = 6) and EsLetra(Dom[1]) and EsLetra(Dom[2]) and EsLetra(Dom[3]) then begin
+    WP := 780; HP := 254;
+    BgArch := 'bg-nacional.png';
+  end else if (L = 6) and EsDigito(Dom[1]) and EsDigito(Dom[2]) and EsDigito(Dom[3]) then begin
+    WP := 320; HP := 276;
+    BgArch := 'bg-moto-nacional.png';
+  end else if EsLetra(Dom[1]) and EsLetra(Dom[2]) and EsDigito(Dom[3]) then begin
+    WP := 780; HP := 254;
+    BgArch := 'bg-mercosur.png';
+  end else begin
+    WP := 320; HP := 276;
+    BgArch := 'bg-moto-mercosur.png';
+  end;
+
+  Sn := BoxW * 1.0 / WP;
+  Sh := Sc(CHAPA_BOX_ALTO) * 1.0 / HP;
+  if Sh < Sn then
+    ChapaS := Sh
+  else
+    ChapaS := Sn;
+  ChapaOx := M + (BoxW - Round(WP * ChapaS)) div 2;
+  ChapaOy := Sc(200);
+
+  ExtraerTmp(BgArch);
+  ChapaBg.PngImage.LoadFromFile(ExpandConstant('{tmp}\') + BgArch);
+  ChapaBg.Left := ChapaOx;
+  ChapaBg.Top := ChapaOy;
+  ChapaBg.Width := Round(WP * ChapaS);
+  ChapaBg.Height := Round(HP * ChapaS);
+  ChapaBg.Visible := True;
+
+  if L = 8 then begin
+    { vieja: letra enorme + millon chico + 6 digitos, grupos a la izquierda;
+      XL=780*0.045, B letra=230*0.78, B millon=230*0.36, B resto=230*0.80,
+      gaps 780*0.010 y 780*0.030 }
+    X0 := 780 * 0.045;
+    PonerGlifo(ChapaG1, 1, NombreGlifo('vieja-l', Dom[1]),
+      IndiceGlifo(Dom[1]), X0, 230 * 0.78, False);
+    X0 := X0 + TokensCsv(CHAPA_VJL_ADV, IndiceGlifo(Dom[1]), 0) * 0.01 + 780 * 0.010;
+    PonerGlifo(ChapaG2, 2, NombreGlifo('vieja-m', Dom[2]),
+      IndiceDigito(Dom[2]), X0, 230 * 0.36, False);
+    X1 := X0 + TokensCsv(CHAPA_VJM_ADV, IndiceDigito(Dom[2]), 0) * 0.01 + 780 * 0.030;
+    P := 0;
+    for Q := 3 to 8 do begin
+      Idx := IndiceDigito(Dom[Q]);
+      PonerGlifo(ChapaSlotPorNum(Q), 3, NombreGlifo('vieja-d', Dom[Q]), Idx,
+        X1 + P, 230 * 0.80, False);
+      P := P + TokensCsv(CHAPA_VJD_ADV, Idx, 0) * 0.01;
+    end;
+  end else if (L = 6) and EsLetra(Dom[1]) then begin
+    { nacional auto: fy=254*0.285, bandaInf=254*0.105, base=fy+fh*0.80;
+      letras cx=780*0.325, digitos cx=780*0.675 }
+    B := 254 * 0.285 + (254 - 254 * 0.285 - 254 * 0.105) * 0.80;
+    GrupoCentrado(Dom, CHAPA_NAC_ADV, 780 * 0.325, B, 1, 3, 4, 'nacional');
+    GrupoCentrado(Dom, CHAPA_NAC_ADV, 780 * 0.675, B, 4, 6, 4, 'nacional');
+  end else if L = 6 then begin
+    { moto nacional: fy=276*0.30, fh=276-fy-276*0.115, cx=320*0.50;
+      baseline digitos fy+fh*0.40, letras fy+fh*0.88 }
+    GrupoCentrado(Dom, CHAPA_MTN_ADV, 320 * 0.50,
+      276 * 0.30 + (276 - 276 * 0.30 - 276 * 0.115) * 0.40, 1, 3, 5,
+      'moto-nacional');
+    GrupoCentrado(Dom, CHAPA_MTN_ADV, 320 * 0.50,
+      276 * 0.30 + (276 - 276 * 0.30 - 276 * 0.115) * 0.88, 4, 6, 5,
+      'moto-nacional');
+  end else if EsLetra(Dom[1]) and EsLetra(Dom[2]) then begin
+    { mercosur auto: p/d/s en cx=780*0.155/0.500/0.845, baseline 254*0.855 }
+    GrupoCentrado(Dom, CHAPA_MSR_ADV, 780 * 0.155, 254 * 0.855, 1, 2, 6,
+      'mercosur');
+    GrupoCentrado(Dom, CHAPA_MSR_ADV, 780 * 0.500, 254 * 0.855, 3, 5, 6,
+      'mercosur');
+    GrupoCentrado(Dom, CHAPA_MSR_ADV, 780 * 0.845, 254 * 0.855, 6, 7, 6,
+      'mercosur');
+  end else begin
+    { moto mercosur: fila 1 LDDD cx=320*0.52 baseline 276*0.575;
+      fila 2 LLL cx=320*0.52 baseline 276*0.885 }
+    GrupoCentrado(Dom, CHAPA_MTM_ADV, 320 * 0.52, 276 * 0.575, 1, 4, 7,
+      'moto-mercosur');
+    GrupoCentrado(Dom, CHAPA_MTM_ADV, 320 * 0.52, 276 * 0.885, 5, 7, 7,
+      'moto-mercosur');
+  end;
+end;
+
+{ ---------------------------------------------------------------------- }
+{ Utilidades                                                              }
+{ ---------------------------------------------------------------------- }
 
 { Equivale a String.replace(From, To) en JS: reemplaza SOLO la 1a ocurrencia. }
 function ReplaceFirst(const S, FromStr, ToStr: String): String;
@@ -512,12 +823,14 @@ begin
     EdtResultado.Text := DV;
     BtnCopiar.Enabled := True;
     SetEstado('Formato válido: copiá "' + DV + '" en el sitio de AGIP.', 1);
+    MostrarChapa(EdtDominio.Text);
     AppForm.ActiveControl := EdtResultado;
     EdtResultado.SelectAll;
     HideCaret(EdtResultado.Handle);
   end else begin
     EdtResultado.Text := '';
     BtnCopiar.Enabled := False;
+    OcultarChapa;
     SetEstado(Err, 2);
     AppForm.ActiveControl := EdtDominio;
   end;
@@ -584,6 +897,7 @@ begin
     EdtResultado.Text := '';
   if BtnCopiar <> nil then
     BtnCopiar.Enabled := False;
+  OcultarChapa;
   SetEstado('Escribí el dominio y apretá Calcular.', 0);
 end;
 
@@ -642,37 +956,43 @@ begin
   LblEstado.Width := W - 2 * M - Sc(24);
   LblEstado.Height := Sc(28);
 
+  LblChapa.Left := M;
+  LblChapa.Top := Sc(184);
+
+  { la chapa misma la posiciona MostrarChapa segun el estilo: ocupa un
+    recuadro de ClientWidth-2*M x Sc(CHAPA_BOX_ALTO) desde Sc(200) }
+
   LblSec3.Left := M;
-  LblSec3.Top := Sc(196);
+  LblSec3.Top := Sc(365);
 
   LblLinkIcon.Left := M;
-  LblLinkIcon.Top := Sc(215);
+  LblLinkIcon.Top := Sc(384);
 
   LblLink.Left := M + Sc(24);
-  LblLink.Top := Sc(213);
+  LblLink.Top := Sc(382);
   LblLink.Width := W - 2 * M - Sc(24);
   LblLink.Height := Sc(20);
 
   LblAyuda.Left := M;
-  LblAyuda.Top := Sc(240);
+  LblAyuda.Top := Sc(409);
   LblAyuda.Width := W - 2 * M;
   LblAyuda.Height := Sc(36);
 
   LblAviso.Left := M;
-  LblAviso.Top := Sc(284);
+  LblAviso.Top := Sc(453);
   LblAviso.Width := W - 2 * M - Sc(100);
   LblAviso.Height := Sc(36);
 
   LblAutorIcon.Left := M;
-  LblAutorIcon.Top := Sc(329);
+  LblAutorIcon.Top := Sc(498);
 
   LblAutor.Left := M + Sc(24);
-  LblAutor.Top := Sc(327);
+  LblAutor.Top := Sc(496);
   LblAutor.Width := W - 2 * M - Sc(24) - Sc(100);
   LblAutor.Height := Sc(20);
 
   BtnCerrar.Left := W - M - Sc(90);
-  BtnCerrar.Top := Sc(322);
+  BtnCerrar.Top := Sc(491);
   BtnCerrar.Width := Sc(90);
   BtnCerrar.Height := Sc(26);
 end;
@@ -691,7 +1011,7 @@ begin
   if Dpi <= 0 then Dpi := 96;
 
   AppForm.ClientWidth := Sc(500);
-  AppForm.ClientHeight := Sc(362);
+  AppForm.ClientHeight := Sc(531);
 
   ExtractTemporaryFile('preview-64.png');
   ExtractTemporaryFile('accent-teal.png');
@@ -707,6 +1027,64 @@ begin
   IconoApp.PngImage.LoadFromFile(ExpandConstant('{tmp}\preview-64.png'));
   IconoApp.Stretch := True;
   IconoApp.BackColor := clNone;
+
+  { chapa del dominio: 1 fondo + 8 slots de glifos; el orden de creacion
+    fija el z-order (el fondo queda debajo de los tiles) }
+  ChapaExtraidos := TStringList.Create;
+
+  ChapaBg := TBitmapImage.Create(AppForm);
+  ChapaBg.Parent := AppForm;
+  ChapaBg.Stretch := True;
+  ChapaBg.BackColor := clNone;
+  ChapaBg.Visible := False;
+
+  ChapaG1 := TBitmapImage.Create(AppForm);
+  ChapaG1.Parent := AppForm;
+  ChapaG1.Stretch := True;
+  ChapaG1.BackColor := clNone;
+  ChapaG1.Visible := False;
+
+  ChapaG2 := TBitmapImage.Create(AppForm);
+  ChapaG2.Parent := AppForm;
+  ChapaG2.Stretch := True;
+  ChapaG2.BackColor := clNone;
+  ChapaG2.Visible := False;
+
+  ChapaG3 := TBitmapImage.Create(AppForm);
+  ChapaG3.Parent := AppForm;
+  ChapaG3.Stretch := True;
+  ChapaG3.BackColor := clNone;
+  ChapaG3.Visible := False;
+
+  ChapaG4 := TBitmapImage.Create(AppForm);
+  ChapaG4.Parent := AppForm;
+  ChapaG4.Stretch := True;
+  ChapaG4.BackColor := clNone;
+  ChapaG4.Visible := False;
+
+  ChapaG5 := TBitmapImage.Create(AppForm);
+  ChapaG5.Parent := AppForm;
+  ChapaG5.Stretch := True;
+  ChapaG5.BackColor := clNone;
+  ChapaG5.Visible := False;
+
+  ChapaG6 := TBitmapImage.Create(AppForm);
+  ChapaG6.Parent := AppForm;
+  ChapaG6.Stretch := True;
+  ChapaG6.BackColor := clNone;
+  ChapaG6.Visible := False;
+
+  ChapaG7 := TBitmapImage.Create(AppForm);
+  ChapaG7.Parent := AppForm;
+  ChapaG7.Stretch := True;
+  ChapaG7.BackColor := clNone;
+  ChapaG7.Visible := False;
+
+  ChapaG8 := TBitmapImage.Create(AppForm);
+  ChapaG8.Parent := AppForm;
+  ChapaG8.Stretch := True;
+  ChapaG8.BackColor := clNone;
+  ChapaG8.Visible := False;
 
   LblSec1 := TNewStaticText.Create(AppForm);
   LblSec1.Parent := AppForm;
@@ -747,6 +1125,13 @@ begin
   LblSec2.Font.Size := 8;
   LblSec2.Font.Style := [fsBold];
   LblSec2.Font.Color := RGB(15, 118, 110);
+
+  LblChapa := TNewStaticText.Create(AppForm);
+  LblChapa.Parent := AppForm;
+  LblChapa.Caption := 'CHAPA DEL DOMINIO';
+  LblChapa.Font.Size := 8;
+  LblChapa.Font.Style := [fsBold];
+  LblChapa.Font.Color := RGB(15, 118, 110);
 
   EdtResultado := TNewEdit.Create(AppForm);
   EdtResultado.Parent := AppForm;
