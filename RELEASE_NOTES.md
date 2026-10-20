@@ -1,4 +1,4 @@
-# DV Patentes CABA v1.1.0
+# DV Patentes CABA v1.1.1
 
 <img src="https://raw.githubusercontent.com/mikear/DV/main/docs/screenshot.png" alt="Aplicación calculando el dígito verificador de AB123CD con la chapa del dominio dibujada" width="560">
 
@@ -10,6 +10,22 @@ Hecha por **[mikear](https://github.com/mikear/DV)**. Código fuente:
 <https://github.com/mikear/DV>.
 
 **No oficial. Sin afiliación con AGIP.** Ver `DISCLAIMER.md`.
+
+## Novedades de 1.1.1
+
+### Escudo argentino real en la placa pre-2016
+
+- La placa nacional (1995-2016, con banda "ARGENTINA") lleva ahora el **escudo
+  argentino auténtico a color** — sol de mayo, laureles, gorro frigio — en
+  vez del emblema esquemático. También en la placa de moto. El PNG transparente
+  queda horneado en el arte embebido: la app no abre red ni lee archivos.
+
+### Agujeros de la banda Mercosur corregidos
+
+- El estilo Mercosur (2016+) dibuja ahora las **dos ranuras blancas pasantes**
+  del borde superior de la banda, en la posición real de la placa (~27% y ~69%
+  del ancho). Antes había una sola, desplazada: el agujero de la mitad
+  celeste superior quedaba tapado por la zona de la bandera. Auto y moto.
 
 ## Novedades de 1.1.0
 
@@ -97,6 +113,8 @@ node fuente/test-paridad.js
 
 ## Cambios anteriores
 
+- **1.1.0** — chapa del dominio: la ventana dibuja la patente en el estilo
+  correcto (5 estilos), arte embebido con transparencia, sin red.
 - **1.0.3** — jerarquía de acciones y copia simplificada; validación junto al
   campo; README reorganizado con badges y FAQ.
 - **1.0.2** — autoría visible en la ventana y en los metadatos del ejecutable.

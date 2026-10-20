@@ -175,6 +175,12 @@ La placa es **decorativa** (no interviene en el cálculo del DV):
   y las dos de moto en formato de dos filas.
 - **Procedencia**: el arte es una reimplementación propia del diseño de las
   chapas argentinas (banda azul Pantone 286, guilloché, tipografía con
-  relieve), generada con un exportador a PNG. El generador no es parte del
+  relieve), generada con un exportador a PNG. La placa nacional 1995-2016
+  lleva el **escudo nacional real** a color, integrado como PNG transparente
+  desde la fuente del exportador (Wikimedia Commons, símbolo oficial en
+  dominio público) y horneado en los fondos al exportar; el binario no lo lee
+  en tiempo de ejecución y no hay red en ningún punto. Los agujeros de la
+  banda Mercosur son las dos ranuras pasantes de la placa real (≈27% y ≈69%
+  del ancho). El generador no es parte del
   paquete público; los PNG resultantes sí viajan para poder reconstruir y
   auditar el binario.

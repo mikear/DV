@@ -7,6 +7,29 @@ y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-20
+
+### Arreglado
+
+- **Agujeros de la banda Mercosur**: la placa 2016 tiene dos ranuras blancas
+  pasantes sobre el borde superior de la banda (a ~27% y ~69% del ancho); el
+  arte dibujaba una sola al centro, desplazada y perdida en la zona de la
+  bandera (el "agujero tapado" de la mitad celeste superior). Auto y moto.
+
+### Agregado
+
+- **Escudo nacional real** en la placa pre-2016 (nacional `ABC123` y moto
+  `123ABC`): la placa lleva ahora el escudo argentino auténtico a color
+  (sol de mayo, laureles, gorro frigio), integrado como PNG transparente en
+  los fondos generados. Fuente: Wikimedia Commons (símbolo oficial, dominio
+  público). La app sigue sin abrir red ni leer archivos: el arte va embebido
+  en el `.exe`.
+
+### Cambios
+
+- Regenerado el arte de 4 fondos y 5 muestras de control; `chapas-layout.iss`
+  no cambia (sin métricas de glifos nuevas). El binario sube ~60 KB.
+
 ## [1.1.0] - 2026-10-20
 
 ### Agregado
