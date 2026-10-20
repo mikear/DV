@@ -5,6 +5,15 @@ Todo notable de este proyecto queda documentado en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-1.1.0/),
 y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Documentación
+
+- README reorganizado con llamada a la descarga, badges de CI y plataforma,
+  preguntas frecuentes y sección de autoría.
+- Vista previa social del repositorio en `docs/social-preview.png`.
+- Descripción, topics y Discussions del repositorio actualizados.
+
 ## [1.0.2] - 2026-10-20
 
 ### Agregado

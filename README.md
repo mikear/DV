@@ -1,23 +1,31 @@
 <div align="center">
 
+<img src="iconos/preview-128.png" width="88" height="88" alt="Icono de DV Patentes CABA">
+
 # DV Patentes CABA
 
-**Calculadora portátil del dígito verificador de patentes de la Ciudad Autónoma de Buenos Aires**
+**El dígito verificador que pide AGIP, calculado en tu PC.**
+
+App portátil para Windows que calcula el DV de patentes de la Ciudad Autónoma
+de Buenos Aires. Sin instalación, sin conexiones propias y sin enviar datos.
+
+<a href="https://github.com/mikear/DV/releases/latest/download/dv-caba-portable-osint.zip"><img src="https://img.shields.io/badge/Descargar_para_Windows-14b8a6?style=for-the-badge&logo=windows&logoColor=white" alt="Descargar para Windows"></a>
+<a href="https://github.com/mikear/DV"><img src="https://img.shields.io/badge/C%C3%B3digo_fuente-181717?style=for-the-badge&logo=github&logoColor=white" alt="Código fuente en GitHub"></a>
+
+<br>
 
 [![Release](https://img.shields.io/github/v/release/mikear/DV?style=flat-square&label=release)](https://github.com/mikear/DV/releases/latest)
 [![Descargas](https://img.shields.io/github/downloads/mikear/DV/total?style=flat-square&label=descargas)](https://github.com/mikear/DV/releases/latest)
+[![Tests](https://github.com/mikear/DV/actions/workflows/test.yml/badge.svg)](https://github.com/mikear/DV/actions/workflows/test.yml)
+[![Plataforma](https://img.shields.io/badge/plataforma-Windows%2010%2F11-0078D6?style=flat-square)](https://github.com/mikear/DV/releases/latest)
 [![Licencia](https://img.shields.io/badge/licencia-MIT-14b8a6?style=flat-square)](LICENSE)
-[![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6?style=flat-square)](https://github.com/mikear/DV/releases/latest)
-[![Sin instalación](https://img.shields.io/badge/portable-sin%20instalador-64748b?style=flat-square)](#uso-rápido)
 [![No oficial](https://img.shields.io/badge/estado-no%20oficial%20con%20AGIP-f59e0b?style=flat-square)](DISCLAIMER.md)
 
 <img src="docs/screenshot.png" alt="Captura de la aplicación calculando el dígito verificador de AB123CD" width="560">
 
-Ejecutable único. Sin conexiones propias. Cero instalación. Código fuente incluido.
+**Windows 10/11** · **~1,6 MB** · **Portable** · **Código fuente incluido**
 
-Hecho por [mikear](https://github.com/mikear/DV) — <https://github.com/mikear/DV>
-
-[Cómo verificar el archivo](#verificación-y-auditoría) · [El algoritmo](ALGORITMO_DV.md) · [Aviso legal](DISCLAIMER.md)
+[Descargar](#descarga) · [Verificación](#verificación-y-auditoría) · [El algoritmo](#el-algoritmo) · [Aviso legal](DISCLAIMER.md)
 
 </div>
 
@@ -25,43 +33,54 @@ Hecho por [mikear](https://github.com/mikear/DV) — <https://github.com/mikear/
 
 ## Índice
 
+- [Descarga](#descarga)
 - [Qué hace](#qué-hace)
-- [Inicio rápido](#inicio-rápido)
 - [Uso](#uso)
 - [Formatos aceptados](#formatos-aceptados)
 - [El algoritmo](#el-algoritmo)
 - [Verificación y auditoría](#verificación-y-auditoría)
 - [Privacidad](#privacidad)
+- [Preguntas frecuentes](#preguntas-frecuentes)
 - [Sobre los antivirus](#sobre-los-antivirus)
 - [Aviso legal](#aviso-legal)
 - [Contribuir](#contribuir)
+- [Autor](#autor)
+- [Cambios](#cambios)
 - [Licencia](#licencia)
+
+## Descarga
+
+[Descargar la última versión](https://github.com/mikear/DV/releases/latest/download/dv-caba-portable-osint.zip) · [Todas las releases](https://github.com/mikear/DV/releases)
+
+1. Descargá el zip y descomprimilo.
+2. Verificá el hash contra `SHA256SUMS.txt`.
+3. Ejecutá `dv-caba-portable.exe`, escribí el dominio y apretá **Calcular**.
+
+**Requisitos:** Windows 10 1607 o superior (Windows 11 incluido). La app usa
+`GetDpiForWindow` y la tipografía `Segoe MDL2 Assets`.
+
+**No necesitás:** instalar, crear una cuenta ni conexión a internet.
+
+> ¿Preferís no descargar nada? Pegá [`snippet-consola.js`](snippet-consola.js)
+> en la consola del navegador con el sitio de AGIP abierto y completa el campo solo.
 
 ## Qué hace
 
-El sitio de [AGIP](https://lb.agip.gob.ar/ConsultaPat/) pide un **dígito verificador**
-para mostrar los datos de una patente. Este programa lo calcula en tu computadora,
-sin que la app se conecte a internet y sin instalar nada.
+El sitio de [AGIP](https://lb.agip.gob.ar/ConsultaPat/) pide un **dígito
+verificador** para mostrar los datos de una patente. Esta app hace ese cálculo
+localmente: no consulta el sitio, no automatiza trámites y no envía datos.
 
-| | |
-|---|---|
-| **Sin red propia** | La app no abre conexiones, no envía ni recolecta datos. El enlace del pie abre el navegador sólo si lo clickeás. |
-| **Sin instalación** | Es un `.exe` portátil: no muestra asistente, no deja nada en el sistema, no hay desinstalador. |
-| **Sin cmd ni PowerShell** | El portapapeles se maneja con API nativa de Win32. El loader de Inno ejecuta una copia temporal del propio binario. |
-| **Con auditoría** | Trae el código fuente, los vectores de prueba y la documentación del algoritmo. |
-| **Con autotest** | Antes de abrir la ventana (y antes del modo archivo) corre un autotest de humo que cubre las 26 letras y casos negativos; la batería completa de 432 casos está en `test-paridad.js`. |
-
-## Inicio rápido
-
-1. Descargá el zip de la [última release](https://github.com/mikear/DV/releases/latest), descomprimilo y ejecutá `dv-caba-portable.exe`.
-2. Verificá el hash y ejecutalo. No hace falta instalar nada.
-3. Escribí el dominio, apretá **Calcular** y copiá el resultado.
-
-**Requisitos:** Windows 10 1607 o superior (Windows 11 incluido). La app usa
-`GetDpiForWindow` y la tipografía `Segoe MDL2 Assets` para los glifos.
-
-¿Prefieres no descargar nada? Pegá `snippet-consola.js` en la consola del
-navegador con el sitio de AGIP abierto y te completa el campo solo.
+- **Sin red propia**: la app no abre conexiones. Los enlaces del pie abren el
+  navegador sólo si los clickeás.
+- **Sin instalación**: es un `.exe` portátil: no muestra asistente, no deja nada
+  en el sistema y no tiene desinstalador.
+- **Sin cmd ni PowerShell**: el portapapeles se maneja con API nativa de Win32.
+  El loader de Inno ejecuta una copia temporal del propio binario.
+- **Con auditoría**: incluye el código fuente, los vectores de prueba y la
+  documentación del algoritmo.
+- **Con autotest**: antes de abrir la ventana (y antes del modo archivo) corre un
+  autotest de humo que cubre las 26 letras y casos negativos. La batería completa
+  de 432 casos está en `test-paridad.js`.
 
 ## Uso
 
@@ -69,7 +88,8 @@ navegador con el sitio de AGIP abierto y te completa el campo solo.
 
 Abrí el `.exe`, escribí el dominio y apretá **Calcular**. El resultado aparece
 en grande, con dos accesos rápidos: el icono de copia junto al dominio y el
-botón **Copiar resultado**. El enlace inferior abre el sitio oficial.
+botón **Copiar resultado**. Los enlaces inferiores abren el sitio oficial y el
+repositorio del proyecto.
 
 ### Línea de comandos
 
@@ -156,6 +176,10 @@ node test-paridad.js
 #            432 comprobaciones con los vectores dorados (paquete público)
 ```
 
+Cada push corre esta batería en
+[GitHub Actions](https://github.com/mikear/DV/actions/workflows/test.yml).
+El binario además ejecuta el autotest de humo antes de la GUI y del modo archivo.
+
 ### Qué incluye el paquete
 
 ```text
@@ -183,13 +207,61 @@ generados y verificados contra el original en el entorno privado.
 
 ## Privacidad
 
-- La app no abre conexiones de red; el enlace del pie abre el navegador recién
-  cuando lo clickeás.
+- La app no abre conexiones de red; los enlaces del pie abren el navegador
+  recién cuando los clickeás.
 - No recolecta ni envía datos.
 - No escribe en el registro de Windows ni instala nada. El modo CLI escribe
   únicamente el archivo de salida que le indiques.
 - El resultado se calcula localmente a partir del texto que tipeás.
 - Si usás `/LOG=...`, Inno puede guardar un log local; no se envía a ningún lado.
+
+## Preguntas frecuentes
+
+<details>
+<summary><strong>¿Es una herramienta oficial de AGIP?</strong></summary>
+
+No. Es un proyecto independiente, sin afiliación ni respaldo de AGIP. El DV es
+informativo: AGIP expresa que su consulta "carece de valor documental alguno".
+</details>
+
+<details>
+<summary><strong>¿La app se conecta a internet o envía datos?</strong></summary>
+
+No abre conexiones propias, no recolecta datos y no envía nada. Sólo abre el
+navegador si clickeás el enlace al sitio de AGIP o al repositorio.
+</details>
+
+<details>
+<summary><strong>¿Por qué Windows SmartScreen o el antivirus lo bloquean?</strong></summary>
+
+El `.exe` no está firmado y usa el loader de Inno Setup, que ejecuta una copia
+temporal del propio binario. Es un falso positivo típico de binarios nuevos o
+poco conocidos, no una detección de comportamiento. Verificá el hash,
+reconstruilo desde `fuente/` o pedí la revisión como se explica en
+[Sobre los antivirus](#sobre-los-antivirus).
+</details>
+
+<details>
+<summary><strong>¿Necesito instalar algo?</strong></summary>
+
+No. Es portátil: descomprimís el zip y ejecutás `dv-caba-portable.exe` en
+Windows 10 1607 o superior. No hay instalador ni desinstalador.
+</details>
+
+<details>
+<summary><strong>¿Funciona en macOS o Linux?</strong></summary>
+
+La app gráfica es nativa de Windows y no corre en macOS ni Linux. La
+implementación de referencia [`dv.js`](dv.js) sí funciona con Node.js.
+</details>
+
+<details>
+<summary><strong>¿Qué pasa si AGIP cambia el algoritmo?</strong></summary>
+
+El test de paridad permite detectarlo. Si encontrás una diferencia, abrí un
+issue con el dominio y el DV que devuelve el sitio para actualizar los vectores
+y la implementación.
+</details>
 
 ## Sobre los antivirus
 
@@ -231,8 +303,21 @@ Todo aporte es bienvenido: reportes de error, correcciones del algoritmo ante
 cambios de AGIP, mejoras de la GUI o traducciones.
 
 - Reportá bugs con la [plantilla de problemas](https://github.com/mikear/DV/issues/new/template/bug_report.yml).
-- Leé [CONTRIBUTING.md](CONTRIBUTING.md) antes de mandar un pull request.
-- Encontraste una vulnerabilidad? No abras un issue público: ver [SECURITY.md](SECURITY.md).
+- Para preguntas o ideas, usá [Discussions](https://github.com/mikear/DV/discussions).
+- Leé [CONTRIBUTING.md](CONTRIBUTING.md) y el [código de conducta](CODE_OF_CONDUCT.md) antes de participar.
+- ¿Encontraste una vulnerabilidad? No abras un issue público: ver [SECURITY.md](SECURITY.md).
+
+## Autor
+
+Creado y mantenido por **[mikear](https://github.com/mikear/DV)**.
+
+- GitHub: <https://github.com/mikear/DV>
+- Releases: <https://github.com/mikear/DV/releases>
+
+## Cambios
+
+El historial completo está en [CHANGELOG.md](CHANGELOG.md). Las novedades de
+cada versión, en [Releases](https://github.com/mikear/DV/releases).
 
 ## Licencia
 
