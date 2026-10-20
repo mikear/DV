@@ -5,6 +5,19 @@ Todo notable de este proyecto queda documentado en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-1.1.0/),
 y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [1.0.2] - 2026-10-20
+
+### Agregado
+
+- **Autoría visible en la app**: el pie de la ventana muestra
+  `Hecho por mikear - github.com/mikear/DV` con enlace clickeable al
+  repositorio.
+- **Metadatos del ejecutable**: `VersionInfoCopyright` incluye la URL del
+  repositorio; se agregaron `AppPublisherURL`, `AppSupportURL` y
+  `AppUpdatesURL`.
+- **Documentación**: línea de autoría con enlace a GitHub en `README.md` y
+  `DISCLAIMER.md`.
+
 ## [1.0.1] - 2026-10-19
 
 ### Corregido

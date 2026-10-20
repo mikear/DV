@@ -15,6 +15,8 @@
 
 Ejecutable único. Sin conexiones propias. Cero instalación. Código fuente incluido.
 
+Hecho por [mikear](https://github.com/mikear/DV) — <https://github.com/mikear/DV>
+
 [Cómo verificar el archivo](#verificación-y-auditoría) · [El algoritmo](ALGORITMO_DV.md) · [Aviso legal](DISCLAIMER.md)
 
 </div>

@@ -52,3 +52,5 @@ infracción. El autor no será responsable de daños derivados del uso o de la
 imposibilidad de uso de esta herramienta.
 
 Lee además `README.md` y la licencia `LICENSE`.
+
+Autor: **mikear** — <https://github.com/mikear/DV>

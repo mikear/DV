@@ -1,4 +1,4 @@
-# DV Patentes CABA v1.0.1
+# DV Patentes CABA v1.0.2
 
 <img src="https://raw.githubusercontent.com/mikear/DV/main/docs/screenshot.png" alt="Aplicación calculando el dígito verificador de AB123CD" width="560">
 
@@ -6,7 +6,16 @@ Calculadora **portátil** del dígito verificador (DV) de patentes de la Ciudad
 Autónoma de Buenos Aires, usado por el sitio de AGIP:
 <https://lb.agip.gob.ar/ConsultaPat/>
 
+Hecha por **[mikear](https://github.com/mikear/DV)**. Código fuente:
+<https://github.com/mikear/DV>.
+
 **No oficial. Sin afiliación con AGIP.** Ver `DISCLAIMER.md`.
+
+## Cambios de 1.0.2
+
+- Autoría visible en la ventana: pie con enlace clickeable al repositorio.
+- La URL del repositorio figura en las propiedades del ejecutable.
+- README y DISCLAIMER con la autoría y el enlace a GitHub.
 
 ## Cambios de 1.0.1
 

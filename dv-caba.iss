@@ -28,23 +28,28 @@
 ; ============================================================================
 
 #define AppName "DV Patentes CABA"
-#define AppVersion "1.0.1"
+#define AppVersion "1.0.2"
 #define OutputName "dv-caba"
+#define Autor "mikear"
+#define RepoURL "https://github.com/mikear/DV"
 #define SiteURL "https://lb.agip.gob.ar/ConsultaPat/"
 
 [Setup]
 AppId={{5B0E2C4A-9F31-4E77-8A62-3D1C7F0A9B21}
 AppName={#AppName}
 AppVersion={#AppVersion}
-AppPublisher=mikear
+AppPublisher={#Autor}
+AppPublisherURL={#RepoURL}
+AppSupportURL={#RepoURL}
+AppUpdatesURL={#RepoURL}
 VersionInfoVersion={#AppVersion}
 VersionInfoProductVersion={#AppVersion}
 VersionInfoTextVersion={#AppVersion}
-VersionInfoCompany=mikear
+VersionInfoCompany={#Autor}
 VersionInfoDescription=Calculadora portable del digito verificador de patentes CABA
 VersionInfoProductName={#AppName}
 VersionInfoOriginalFileName={#OutputName}-portable.exe
-VersionInfoCopyright=Copyright (C) 2026 mikear - Herramienta no oficial
+VersionInfoCopyright=Copyright (C) 2026 {#Autor} - {#RepoURL} - Herramienta no oficial
 SetupIconFile=iconos\dv-caba.ico
 DefaultDirName={autopf}\dv-caba
 DisableDirPage=yes
@@ -85,6 +90,7 @@ const
   GLIFO_ERROR  = #$E711;   { cancel / X }
   GLIFO_COPIAR = #$E8C8;   { copy }
   GLIFO_ABRIR  = #$E8A7;   { open in new window }
+  GLIFO_LINK   = #$E71B;   { link }
 
 var
   AppForm: TForm;
@@ -92,6 +98,7 @@ var
   LblSec1, LblSec2, LblSec3: TNewStaticText;
   LblCopiarIcon, LblCopiarDom, LblLinkIcon, LblEstadoIcon: TNewStaticText;
   LblEstado, LblLink, LblAyuda, LblAviso: TNewStaticText;
+  LblAutorIcon, LblAutor: TNewStaticText;
   EdtDominio, EdtResultado: TNewEdit;
   BtnCalcular, BtnCopiar, BtnCerrar: TNewButton;
   Dpi: Integer;
@@ -515,11 +522,22 @@ begin
     SetEstado('No se pudo copiar. Usa el valor a mano.', 2);
 end;
 
-procedure AbrirSitio(Sender: TObject);
+function AbrirURL(const URL: String): Boolean;
 var
   RC: Integer;
 begin
-  if not ShellExec('open', '{#SiteURL}', '', '', SW_SHOWNORMAL, ewNoWait, RC) then
+  Result := ShellExec('open', URL, '', '', SW_SHOWNORMAL, ewNoWait, RC);
+end;
+
+procedure AbrirSitio(Sender: TObject);
+begin
+  if not AbrirURL('{#SiteURL}') then
+    SetEstado('No se pudo abrir el navegador.', 2);
+end;
+
+procedure AbrirRepo(Sender: TObject);
+begin
+  if not AbrirURL('{#RepoURL}') then
     SetEstado('No se pudo abrir el navegador.', 2);
 end;
 
@@ -630,8 +648,16 @@ begin
   LblAviso.Width := W - 2 * M - Sc(140);
   LblAviso.Height := Sc(32);
 
+  LblAutorIcon.Left := M;
+  LblAutorIcon.Top := Sc(343);
+
+  LblAutor.Left := M + Sc(24);
+  LblAutor.Top := Sc(341);
+  LblAutor.Width := W - 2 * M - Sc(24) - Sc(140);
+  LblAutor.Height := Sc(20);
+
   BtnCerrar.Left := W - M - Sc(124);
-  BtnCerrar.Top := Sc(298);
+  BtnCerrar.Top := Sc(334);
   BtnCerrar.Width := Sc(124);
   BtnCerrar.Height := Sc(30);
 end;
@@ -650,7 +676,7 @@ begin
   if Dpi <= 0 then Dpi := 96;
 
   AppForm.ClientWidth := Sc(500);
-  AppForm.ClientHeight := Sc(342);
+  AppForm.ClientHeight := Sc(376);
 
   ExtractTemporaryFile('preview-64.png');
   ExtractTemporaryFile('accent-teal.png');
@@ -789,6 +815,29 @@ begin
   LblAviso.Font.Color := RGB(100, 116, 139);
   LblAviso.Caption := 'Herramienta no oficial, sin afiliacion con AGIP. ' +
     'El DV es informativo. Uso responsable de los datos.';
+
+  LblAutorIcon := TNewStaticText.Create(AppForm);
+  LblAutorIcon.Parent := AppForm;
+  LblAutorIcon.Caption := GLIFO_LINK;
+  LblAutorIcon.Font.Name := 'Segoe MDL2 Assets';
+  LblAutorIcon.Font.Size := 11;
+  LblAutorIcon.Font.Color := RGB(15, 118, 110);
+  LblAutorIcon.AutoSize := True;
+  LblAutorIcon.Cursor := crHandPoint;
+  LblAutorIcon.Hint := 'Abrir el repositorio en GitHub';
+  LblAutorIcon.ShowHint := True;
+  LblAutorIcon.OnClick := @AbrirRepo;
+
+  LblAutor := TNewStaticText.Create(AppForm);
+  LblAutor.Parent := AppForm;
+  LblAutor.Caption := 'Hecho por {#Autor} - github.com/{#Autor}/DV';
+  LblAutor.Font.Size := 9;
+  LblAutor.Font.Style := [fsBold, fsUnderline];
+  LblAutor.Font.Color := RGB(15, 118, 110);
+  LblAutor.Cursor := crHandPoint;
+  LblAutor.Hint := 'Abrir el repositorio en GitHub';
+  LblAutor.ShowHint := True;
+  LblAutor.OnClick := @AbrirRepo;
 
   BtnCerrar := TNewButton.Create(AppForm);
   BtnCerrar.Parent := AppForm;
