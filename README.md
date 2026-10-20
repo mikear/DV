@@ -13,7 +13,7 @@
 
 <img src="docs/screenshot.png" alt="Captura de la aplicación calculando el dígito verificador de AB123CD" width="560">
 
-Ejecutable único. Cero red. Cero instalación. Código fuente incluido.
+Ejecutable único. Sin conexiones propias. Cero instalación. Código fuente incluido.
 
 [Cómo verificar el archivo](#verificación-y-auditoría) · [El algoritmo](ALGORITMO_DV.md) · [Aviso legal](DISCLAIMER.md)
 
@@ -39,21 +39,24 @@ Ejecutable único. Cero red. Cero instalación. Código fuente incluido.
 
 El sitio de [AGIP](https://lb.agip.gob.ar/ConsultaPat/) pide un **dígito verificador**
 para mostrar los datos de una patente. Este programa lo calcula en tu computadora,
-sin conexión a internet y sin instalar nada.
+sin que la app se conecte a internet y sin instalar nada.
 
 | | |
 |---|---|
-| **Sin red** | No abre conexiones, no envía ni recolecta datos. |
+| **Sin red propia** | La app no abre conexiones, no envía ni recolecta datos. El enlace del pie abre el navegador sólo si lo clickeás. |
 | **Sin instalación** | Es un `.exe` portátil: no muestra asistente, no deja nada en el sistema, no hay desinstalador. |
-| **Sin procesos externos** | El portapapeles se maneja con API nativa de Win32. No invoca `cmd` ni `powershell`. |
+| **Sin cmd ni PowerShell** | El portapapeles se maneja con API nativa de Win32. El loader de Inno ejecuta una copia temporal del propio binario. |
 | **Con auditoría** | Trae el código fuente, los vectores de prueba y la documentación del algoritmo. |
-| **Con autotest** | Antes de abrir la ventana corre 432 casos de prueba; si algo falla, no abre. |
+| **Con autotest** | Antes de abrir la ventana (y antes del modo archivo) corre un autotest de humo que cubre las 26 letras y casos negativos; la batería completa de 432 casos está en `test-paridad.js`. |
 
 ## Inicio rápido
 
-1. Descargá [`dv-caba-portable.exe`](https://github.com/mikear/DV/releases/latest) desde la última release.
+1. Descargá el zip de la [última release](https://github.com/mikear/DV/releases/latest), descomprimilo y ejecutá `dv-caba-portable.exe`.
 2. Verificá el hash y ejecutalo. No hace falta instalar nada.
 3. Escribí el dominio, apretá **Calcular** y copiá el resultado.
+
+**Requisitos:** Windows 10 1607 o superior (Windows 11 incluido). La app usa
+`GetDpiForWindow` y la tipografía `Segoe MDL2 Assets` para los glifos.
 
 ¿Prefieres no descargar nada? Pegá `snippet-consola.js` en la consola del
 navegador con el sitio de AGIP abierto y te completa el campo solo.
@@ -69,10 +72,10 @@ botón **Copiar resultado**. El enlace inferior abre el sitio oficial.
 ### Línea de comandos
 
 ```text
-dv-caba.exe                     -> abre la app
-dv-caba.exe AB123CD             -> app con el dominio precargado
-dv-caba.exe AB123CD C:\r.txt    -> escribe "DV=28" y sale (exit 0 = ok, 2 = error)
-dv-caba.exe --copy 28           -> copia al portapapeles (exit 0 = ok, 2 = error)
+dv-caba-portable.exe                     -> abre la app
+dv-caba-portable.exe AB123CD             -> app con el dominio precargado
+dv-caba-portable.exe AB123CD C:\r.txt    -> escribe "DV=28" y sale (exit 0 = ok, 2 = error)
+dv-caba-portable.exe --copy 28           -> copia al portapapeles (exit 0 = ok, 2 = error)
 ```
 
 Un argumento que empieza con `/` nunca se interpreta como archivo de salida.
@@ -94,8 +97,8 @@ node dv.js AB123CD ABC123 A1234567
 
 | Tipo | Estructura | Ejemplo | DV |
 |---|---|---|---|
-| Auto Mercosur | 2 letras · 3 dígitos · 2 letras | `QQ999QQ` | 99 |
-| Auto nueva | 3 letras · 3 dígitos | `AB123CD` | 28 |
+| Auto Mercosur | 2 letras · 3 dígitos · 2 letras | `AB123CD` | 28 |
+| Auto nueva | 3 letras · 3 dígitos | `ABC123` | 57 |
 | Auto vieja | 1 letra · 7 dígitos | `A1234567` | 73 |
 | Moto Mercosur | 1 letra · 3 dígitos · 3 letras | `A123BCD` | 37 |
 | Moto nueva | 3 dígitos · 3 letras | `123ABC` | 93 |
@@ -107,10 +110,10 @@ suma por paridad e iteración de raíz digital.
 
 ```text
 AB123CD
-  → sustituir letras por la tabla (A=14, B=01, C=00)   "140112300"
-  → sumar por paridad de índices                        a=…  b=…
-  → raíz digital de cada suma                           2  y  8
-  → concatenar                                          DV = 28
+  → sustituir letras por la tabla (A=14, B=01, C=00, D=16)   "14011230016"
+  → sumar por paridad de índices                              a=11  b=8
+  → raíz digital de cada suma                                 2  y  8
+  → concatenar                                                DV = 28
 ```
 
 La reconstrucción completa, con ejemplo trabajado, particularidades del
@@ -134,13 +137,21 @@ Comparalo con `SHA256SUMS.txt`, incluido en la release y en el paquete.
 Necesitás [Inno Setup 6](https://jrsoftware.org/isinfo.php):
 
 ```powershell
+iscc.exe dv-caba.iss
+```
+
+En el paquete, el script está en `fuente\` y los iconos en `fuente\iconos\`:
+
+```powershell
 iscc.exe fuente\dv-caba.iss
 ```
 
 **3. Corriendo los tests**
 
 ```bash
-node test-paridad.js     # 432 casos / 1282 comprobaciones
+node test-paridad.js
+# 432 casos: 1282 comprobaciones contra el original de AGIP
+#            432 comprobaciones con los vectores dorados (paquete público)
 ```
 
 ### Qué incluye el paquete
@@ -157,7 +168,11 @@ dv-caba-portable-osint/
     ├── dv-caba.iss          script de Inno Setup 6
     ├── dv.js                implementación de referencia
     ├── test-paridad.js      batería de pruebas
-    └── snippet-consola.js   utilidad para el navegador
+    ├── snippet-consola.js   utilidad para el navegador
+    └── iconos/              icono y recursos que usa el .iss
+        ├── dv-caba.ico
+        ├── preview-64.png
+        └── accent-teal.png
 ```
 
 **Qué no incluye**: el JavaScript original de AGIP (es código de terceros) ni
@@ -166,21 +181,27 @@ generados y verificados contra el original en el entorno privado.
 
 ## Privacidad
 
-- No abre conexiones de red.
+- La app no abre conexiones de red; el enlace del pie abre el navegador recién
+  cuando lo clickeás.
 - No recolecta ni envía datos.
-- No escribe en el registro de Windows ni instala nada.
+- No escribe en el registro de Windows ni instala nada. El modo CLI escribe
+  únicamente el archivo de salida que le indiques.
 - El resultado se calcula localmente a partir del texto que tipeás.
+- Si usás `/LOG=...`, Inno puede guardar un log local; no se envía a ningún lado.
 
 ## Sobre los antivirus
 
 Algunos antivirus señalan binarios desconocidos, sin firmar y empaquetados con
 heurística en la nube. Es un **falso positivo** típico, no una detección de
-comportamiento: el binario no hace red, no ejecuta procesos y no instala nada.
+comportamiento: el binario no hace red, no invoca `cmd` ni `powershell` para el
+cálculo y no instala nada. El loader de Inno ejecuta una copia temporal del
+propio binario y el enlace abre el navegador sólo si lo clickeás.
 
 Si tu antivirus lo bloquea:
 
 - Verificá el hash contra `SHA256SUMS.txt`.
-- Reconstruí el ejecutable desde `fuente/dv-caba.iss` y compará.
+- Reconstruí el ejecutable desde `dv-caba.iss` (en el paquete:
+  `fuente\dv-caba.iss` con `fuente\iconos\`) y compará.
 - Pedí la revisión en [Microsoft Security Intelligence](https://www.microsoft.com/wdsi/filesubmission)
   o en [McAfee Threat Submission](https://www.mcafee.com/us/consumer-support/other-threats/false-positive-reporting.html).
 - **No lo subas a VirusTotal** antes de ese trámite: VT comparte las muestras

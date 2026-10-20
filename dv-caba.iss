@@ -9,24 +9,26 @@
 ;  Algoritmo: port 1:1 de patente.getDv()
 ;             (https://lb.agip.gob.ar/libFe/js/patente.js, SHA-256 aaf9d407...)
 ;             Verificado contra el original exportado por REA: 432 casos /
-;             1282 comprobaciones (test-paridad.js). El binario repite esa
-;             misma bateria como autotest antes de abrir la GUI.
+;             1282 comprobaciones (test-paridad.js). El binario ejecuta un
+;             autotest de humo (26 letras + negativos) antes de la GUI y del
+;             modo archivo; la bateria completa queda en test-paridad.js.
 ;
 ;  Autoria: mikear - https://github.com/mikear/DV
 ;  Herramienta NO oficial, sin afiliacion con AGIP. Ver DISCLAIMER.md.
 ;
-;  El binario NO ejecuta procesos externos (ni powershell ni cmd): el
-;  portapapeles se usa via API nativa de Win32 (user32/kernel32).
+;  El binario NO invoca cmd ni powershell para calcular ni para el
+;  portapapeles: usa API nativa de Win32 (user32/kernel32) y el enlace del
+;  pie abre el navegador solo a pedido.
 ;
 ;  Modos de uso:
-;    dv-caba.exe                     -> abre la app
-;    dv-caba.exe QQ999QQ             -> app con el dominio precargado
-;    dv-caba.exe QQ999QQ C:\r.txt    -> escribe "DV=99" y sale, exit 0/2
-;    dv-caba.exe --copy 15           -> copia al portapapeles, exit 0/2
+;    dv-caba-portable.exe                     -> abre la app
+;    dv-caba-portable.exe QQ999QQ             -> app con el dominio precargado
+;    dv-caba-portable.exe QQ999QQ C:\r.txt    -> escribe "DV=99" y sale, exit 0/2
+;    dv-caba-portable.exe --copy 15           -> copia al portapapeles, exit 0/2
 ; ============================================================================
 
 #define AppName "DV Patentes CABA"
-#define AppVersion "1.0.0"
+#define AppVersion "1.0.1"
 #define OutputName "dv-caba"
 #define SiteURL "https://lb.agip.gob.ar/ConsultaPat/"
 
@@ -122,6 +124,9 @@ function GlobalLock(AHMem: Integer): Integer;
 function GlobalUnlock(AHMem: Integer): Integer;
   external 'GlobalUnlock@kernel32.dll stdcall';
 
+function GlobalFree(AHMem: Integer): Integer;
+  external 'GlobalFree@kernel32.dll stdcall';
+
 function lstrcpyW(ADest: Integer; ASrc: String): Integer;
   external 'lstrcpyW@kernel32.dll stdcall';
 
@@ -141,13 +146,21 @@ begin
   H := GlobalAlloc(GMEM_MOVEABLE, (Length(Texto) + 1) * 2);
   if H = 0 then Exit;
   P := GlobalLock(H);
-  if P = 0 then Exit;
+  if P = 0 then begin
+    GlobalFree(H);
+    Exit;
+  end;
   lstrcpyW(P, Texto);
   GlobalUnlock(H);
-  if OpenClipboard(0) = 0 then Exit;
+  if OpenClipboard(0) = 0 then begin
+    GlobalFree(H);
+    Exit;
+  end;
   EmptyClipboard();
   if SetClipboardData(CF_UNICODETEXT, H) <> 0 then
-    Result := True;
+    Result := True
+  else
+    GlobalFree(H);
   CloseClipboard();
 end;
 
@@ -199,7 +212,7 @@ end;
 { Los 5 formatos que acepta patente.valido() }
 function FormatoValido(const S: String): Boolean;
 var
-  L, I: Integer;
+  L: Integer;
   okLetras, okDigitos: Boolean;
 begin
   Result := False;
@@ -238,8 +251,6 @@ begin
     Exit;
   end;
   Result := False;
-  I := 0; { evita warning }
-  if I <> 0 then Result := True;
 end;
 
 { Equivale a la regex SIN ANCLAR de 9 a 11 digitos: existe alguna racha
@@ -290,7 +301,7 @@ begin
   DV := 0;
   Err := '';
 
-  Pat := UpperCase(Trim(Dominio));
+  Pat := UpperCase(Dominio);
   if Pat = '' then begin
     Err := 'Debe especificar el dominio a consultar.';
     Exit;
@@ -356,10 +367,9 @@ end;
 
 procedure AddVector(const Dom: String; Expected: Integer; var Fail: Integer);
 var
-  DV, N: Integer;
+  DV: Integer;
   Err: String;
 begin
-  N := Fail;
   if not CalcularDV(Dom, DV, Err) then begin
     Fail := Fail + 1;
     Log('AUTOTEST FAIL ' + Dom + ': ' + Err);
@@ -368,8 +378,17 @@ begin
     Log('AUTOTEST FAIL ' + Dom + ': obtuvo ' + IntToStr(DV) +
         ', esperaba ' + IntToStr(Expected));
   end;
-  if Fail > N then
-    Log('  ^ vector ' + Dom);
+end;
+
+procedure AddInvalid(const Dom: String; var Fail: Integer);
+var
+  DV: Integer;
+  Err: String;
+begin
+  if CalcularDV(Dom, DV, Err) then begin
+    Fail := Fail + 1;
+    Log('AUTOTEST FAIL ' + Dom + ': se esperaba error, obtuvo ' + IntToStr(DV));
+  end;
 end;
 
 function AutoTest: Boolean;
@@ -377,18 +396,68 @@ var
   F: Integer;
 begin
   F := 0;
-  AddVector('QQ999QQ', 99, F);      { formato Mercosur, sintetico }
+
+  { Una por letra: cubre toda la tabla CODIGOS, no solo A-D/Q/Z. }
+  AddVector('AAA999', 33, F);
+  AddVector('BBB999', 93, F);
+  AddVector('CCC999', 99, F);
+  AddVector('DDD999', 39, F);
+  AddVector('EEE999', 96, F);
+  AddVector('FFF999', 69, F);
+  AddVector('GGG999', 39, F);
+  AddVector('HHH999', 99, F);
+  AddVector('III999', 63, F);
+  AddVector('JJJ999', 93, F);
+  AddVector('KKK999', 63, F);
+  AddVector('LLL999', 96, F);
+  AddVector('MMM999', 93, F);
+  AddVector('NNN999', 39, F);
+  AddVector('OOO999', 66, F);
+  AddVector('PPP999', 66, F);
+  AddVector('QQQ999', 36, F);
+  AddVector('RRR999', 39, F);
+  AddVector('SSS999', 96, F);
+  AddVector('TTT999', 99, F);
+  AddVector('UUU999', 36, F);
+  AddVector('VVV999', 69, F);
+  AddVector('WWW999', 33, F);
+  AddVector('XXX999', 99, F);
+  AddVector('YYY999', 36, F);
+  AddVector('ZZZ999', 33, F);
+
+  { Formatos y casos de borde. }
+  AddVector('QQ999QQ', 99, F);
   AddVector('AB123CD', 28, F);
   AddVector('ABC123', 57, F);
-  AddVector('A1234567', 73, F);     { patente vieja }
-  AddVector('123ABC', 93, F);       { moto nueva }
-  AddVector('A123BCD', 37, F);      { moto Mercosur }
-  AddVector('AAA999', 33, F);
+  AddVector('A1234567', 73, F);
+  AddVector('B1234567', 73, F);
+  AddVector('M7654321', 73, F);
+  AddVector('123ABC', 93, F);
+  AddVector('A123BCD', 37, F);
   AddVector('Z9876543', 69, F);
   AddVector('ZZ999AA', 17, F);
   AddVector('Z012BCD', 19, F);
   AddVector('999ZZZ', 33, F);
   AddVector('A0000000', 0, F);      { DV de un solo digito }
+  AddVector('qq999qq', 99, F);      { minusculas }
+  AddVector('Ab123Cd', 28, F);      { mixto }
+
+  { Negativos: el gate de formato tiene que rechazarlos. }
+  AddInvalid('', F);
+  AddInvalid('A12345', F);
+  AddInvalid('A123456', F);
+  AddInvalid('A12345678', F);
+  AddInvalid('AB1234CD', F);
+  AddInvalid('ZZ0000ZZ', F);
+  AddInvalid('A1A1A1A1', F);
+  AddInvalid('AAAA999', F);
+  AddInvalid('ABC12', F);
+  AddInvalid('1234567', F);
+  AddInvalid('AB123C', F);
+  AddInvalid(' QQ999QQ', F);
+  AddInvalid('QQ999QQ ', F);
+  AddInvalid(#$00D1 + '1234567', F);
+
   Result := F = 0;
 end;
 
@@ -472,6 +541,14 @@ begin
     SetEstado('Dominio copiado: ' + Dom, 1)
   else
     SetEstado('No se pudo copiar el dominio.', 2);
+end;
+
+procedure DominioChange(Sender: TObject);
+begin
+  { Al editar el dominio, el DV anterior deja de ser valido. }
+  if EdtResultado <> nil then
+    EdtResultado.Text := '';
+  SetEstado('Escribe el dominio y apreta Calcular.', 0);
 end;
 
 procedure LayoutApp;
@@ -616,6 +693,8 @@ begin
   LblCopiarDom.Font.Color := RGB(100, 116, 139);
   LblCopiarDom.AutoSize := True;
   LblCopiarDom.Cursor := crHand;
+  LblCopiarDom.Hint := 'Copiar dominio';
+  LblCopiarDom.ShowHint := True;
   LblCopiarDom.OnClick := @CopiarDominioClick;
 
   LblSec2 := TNewStaticText.Create(AppForm);
@@ -641,6 +720,10 @@ begin
   LblCopiarIcon.Font.Name := 'Segoe MDL2 Assets';
   LblCopiarIcon.Font.Size := 11;
   LblCopiarIcon.Font.Color := RGB(100, 116, 139);
+  LblCopiarIcon.Cursor := crHandPoint;
+  LblCopiarIcon.Hint := 'Copiar resultado';
+  LblCopiarIcon.ShowHint := True;
+  LblCopiarIcon.OnClick := @CopiarClick;
 
   BtnCopiar := TNewButton.Create(AppForm);
   BtnCopiar.Parent := AppForm;
@@ -673,6 +756,8 @@ begin
   LblLinkIcon.Font.Size := 11;
   LblLinkIcon.Font.Color := RGB(15, 118, 110);
   LblLinkIcon.Cursor := crHandPoint;
+  LblLinkIcon.Hint := 'Abrir el sitio de AGIP';
+  LblLinkIcon.ShowHint := True;
   LblLinkIcon.OnClick := @AbrirSitio;
 
   LblLink := TNewStaticText.Create(AppForm);
@@ -682,6 +767,8 @@ begin
   LblLink.Font.Style := [fsBold, fsUnderline];
   LblLink.Font.Color := RGB(15, 118, 110);
   LblLink.Cursor := crHandPoint;
+  LblLink.Hint := 'Abrir el sitio de AGIP';
+  LblLink.ShowHint := True;
   LblLink.OnClick := @AbrirSitio;
 
   LblAyuda := TNewStaticText.Create(AppForm);
@@ -698,17 +785,21 @@ begin
   LblAviso.Parent := AppForm;
   LblAviso.AutoSize := False;
   LblAviso.WordWrap := True;
-  LblAviso.Font.Size := 7;
-  LblAviso.Font.Color := RGB(148, 163, 184);
+  LblAviso.Font.Size := 8;
+  LblAviso.Font.Color := RGB(100, 116, 139);
   LblAviso.Caption := 'Herramienta no oficial, sin afiliacion con AGIP. ' +
     'El DV es informativo. Uso responsable de los datos.';
 
   BtnCerrar := TNewButton.Create(AppForm);
   BtnCerrar.Parent := AppForm;
   BtnCerrar.Caption := 'Cerrar';
+  BtnCerrar.Cancel := True;
   BtnCerrar.OnClick := @CerrarClick;
 
   SetEstado('Escribe el dominio y apreta Calcular.', 0);
+
+  EdtDominio.OnChange := @DominioChange;
+  AppForm.ActiveControl := EdtDominio;
 
   LayoutApp;
 end;
@@ -716,6 +807,13 @@ end;
 { ---------------------------------------------------------------------- }
 { Arranque                                                                }
 { ---------------------------------------------------------------------- }
+
+function EsModoArchivo: Boolean;
+begin
+  Result := (ParamCount() >= 2) and
+    (CompareText(ParamStr(1), '--copy') <> 0) and
+    (Copy(ParamStr(2), 1, 1) <> '/');
+end;
 
 function InitializeSetup(): Boolean;
 var
@@ -727,10 +825,9 @@ begin
   { Por defecto: nunca se muestra el asistente de Inno. }
   Result := False;
 
-  Log('ARRANQUE argc=' + IntToStr(ParamCount()) + ' p1=[' + ParamStr(1) +
-      '] p2=[' + ParamStr(2) + ']');
+  Log('ARRANQUE argc=' + IntToStr(ParamCount()));
 
-  { dv-caba.exe --copy TEXTO : copia y sale }
+  { dv-caba-portable.exe --copy TEXTO : copia y sale }
   if (ParamCount() >= 2) and (CompareText(ParamStr(1), '--copy') = 0) then begin
     if CopiarPortapapeles(ParamStr(2)) then
       ExitProcess(0)
@@ -739,34 +836,43 @@ begin
     Exit;
   end;
 
-  { dv-caba.exe DOMINIO [archivo-salida] : escribe el resultado y sale.
+  { El autotest corre tambien antes del modo archivo. En modo silencioso
+    no mostramos un dialogo: el codigo de salida 2 es suficiente. }
+  if not AutoTest then begin
+    Log('AUTOTEST FAIL: la aplicacion no se puede usar.');
+    if EsModoArchivo then
+      ExitProcess(2);
+    MsgBox('Fallo el autotest del algoritmo. La aplicacion no se puede usar.',
+      mbError, MB_OK);
+    ExitProcess(2);
+  end;
+
+  { dv-caba-portable.exe DOMINIO [archivo-salida] : escribe el resultado y sale.
     Un conmutador (empieza con "/") nunca se toma como archivo de salida. }
-  if (ParamCount() >= 2) and (Copy(ParamStr(2), 1, 1) <> '/') then begin
+  if EsModoArchivo then begin
     Dom := ParamStr(1);
     OutFile := ParamStr(2);
     if CalcularDV(Dom, DV, Err) then begin
       Line := 'DV=' + IntToStr(DV);
-      SaveStringToFile(OutFile, Line + #13#10, False);
+      if not SaveStringToFile(OutFile, Line + #13#10, False) then begin
+        Log('ERROR: no se pudo escribir ' + OutFile);
+        ExitProcess(2);
+      end;
       ExitProcess(0);
     end else begin
       Line := 'ERROR=' + Err;
-      SaveStringToFile(OutFile, Line + #13#10, False);
+      if not SaveStringToFile(OutFile, Line + #13#10, False) then
+        Log('ERROR: no se pudo escribir ' + OutFile);
       ExitProcess(2);
     end;
     Exit;
   end;
 
   { Modo grafico }
-  if not AutoTest then begin
-    MsgBox('Fallo el autotest del algoritmo. La aplicacion no se puede usar.',
-      mbError, MB_OK);
-    ExitProcess(2);
-  end;
-
   ConstruirUI;
 
   Prefill := '';
-  if ParamCount() >= 1 then
+  if (ParamCount() >= 1) and (Copy(ParamStr(1), 1, 1) <> '/') then
     Prefill := ParamStr(1);
   if Prefill <> '' then begin
     EdtDominio.Text := UpperCase(Prefill);

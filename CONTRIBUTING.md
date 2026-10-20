@@ -30,10 +30,12 @@ node test-paridad.js       # debe pasar antes de tocar nada
   negocia.
 - **Sin dependencias.** Ni en el `.exe` ni en los scripts de Node. Todo con la
   biblioteca estándar.
-- **Sin procesos externos desde el `.exe`.** El portapapeles se maneja con API
-  de Win32; no se invoca `cmd`, `powershell` ni nada equivalente.
-- **Sin conexión a red.** Si algún cambio requiere red, discutilo primero en un
-  issue.
+- **Sin procesos externos desde el `.exe` para el cálculo.** El portapapeles se
+  maneja con API de Win32; no se invoca `cmd`, `powershell` ni nada equivalente.
+  El enlace del pie abre el navegador a pedido. El loader de Inno ejecuta una
+  copia temporal del propio binario.
+- **Sin conexión a red propia.** El enlace abre el navegador cuando lo clickeás.
+  Si algún cambio requiere red, discutilo primero en un issue.
 - **Sin emojis en la interfaz.** Los glifos van con Segoe MDL2 Assets.
 - **Código de AGIP no se sube.** Ni el JavaScript original ni capturas de
   páginas con datos de contribuyentes.
@@ -57,8 +59,9 @@ Necesitás [Inno Setup 6](https://jrsoftware.org/isinfo.php):
 iscc.exe dv-caba.iss
 ```
 
-El binario corre su propio autotest antes de abrir la GUI; si un vector falla,
-no abre y sale con código 2.
+El binario corre su propio autotest de humo antes de abrir la GUI y antes del
+modo archivo; si un vector falla, no abre y sale con código 2. La batería
+completa de 432 casos está en `test-paridad.js`.
 
 ## Estilo
 

@@ -1,4 +1,4 @@
-# DV Patentes CABA v1.0.0
+# DV Patentes CABA v1.0.1
 
 <img src="https://raw.githubusercontent.com/mikear/DV/main/docs/screenshot.png" alt="Aplicación calculando el dígito verificador de AB123CD" width="560">
 
@@ -7,6 +7,19 @@ Autónoma de Buenos Aires, usado por el sitio de AGIP:
 <https://lb.agip.gob.ar/ConsultaPat/>
 
 **No oficial. Sin afiliación con AGIP.** Ver `DISCLAIMER.md`.
+
+## Cambios de 1.0.1
+
+- El paquete ahora incluye `fuente/iconos/` y se puede reconstruir desde el zip.
+- El autotest del binario cubre las 26 letras y casos negativos.
+- El modo archivo devuelve exit 2 si no puede escribir el resultado.
+- El cálculo es estricto con espacios (igual que `patente.valido`); la GUI
+  normaliza el campo antes de calcular.
+- La GUI limpia el resultado al editar el dominio y el icono de copiar
+  resultado ya es clickeable.
+- El snippet de consola valida antes de llamar a `getDv` y normaliza el campo.
+- Documentación corregida: formatos, ejemplo completo, nombres del ejecutable,
+  modos del test y requisito Windows 10 1607+.
 
 ## Qué incluye
 
@@ -18,31 +31,36 @@ Autónoma de Buenos Aires, usado por el sitio de AGIP:
   trabajado, particularidades del original y los IDs de evidencia.
 - `DISCLAIMER.md` — aviso legal completo.
 - `LICENSE` — MIT.
-- `fuente/` — código fuente completo para auditar y reconstruir el binario.
+- `fuente/` — código fuente completo para auditar y reconstruir el binario
+  (incluye `fuente/iconos/`).
 
 ## Ejemplo
 
 `AB123CD` → **DV 28**. Escribí el dominio, apretá Calcular, copiá el resultado.
 
+**Requisitos:** Windows 10 1607 o superior (Windows 11 incluido).
+
 ## Características
 
-- **Cero red**: no abre conexiones, no envía ni recolecta datos.
+- **Cero red**: la app no abre conexiones propias, no envía ni recolecta datos.
+  El enlace del pie abre el navegador cuando lo clickeás.
 - **Cero procesos externos**: el portapapeles se maneja con API nativa de Win32
   (`user32`/`kernel32`), sin invocar `cmd` ni `powershell`.
 - **Cero instalación**: `Uninstallable=no`, `CreateAppDir=no`,
   `PrivilegesRequired=lowest`. El proceso cierra con `ExitProcess(0)`.
-- **Autotest interno**: antes de abrir la ventana corre la misma batería de
-  432 casos / 1282 comprobaciones que `test-paridad.js`; si algo falla, no abre.
+- **Autotest interno de humo**: antes de abrir la ventana (y antes del modo
+  archivo) corre un autotest con las 26 letras y casos negativos. La batería
+  completa de 432 casos está en `fuente/test-paridad.js`.
 - Icono propio multi-tamaño, GUI nativa en Pascal Script, tipografía y glifos
   de Segoe MDL2 Assets (sin emojis).
 
 ## Uso rápido
 
 ```
-dv-caba.exe                     -> abre la app
-dv-caba.exe QQ999QQ             -> app con el dominio precargado
-dv-caba.exe QQ999QQ C:\r.txt    -> escribe "DV=99" y sale (exit 0 / 2)
-dv-caba.exe --copy 99           -> copia al portapapeles (exit 0 / 2)
+dv-caba-portable.exe                     -> abre la app
+dv-caba-portable.exe QQ999QQ             -> app con el dominio precargado
+dv-caba-portable.exe QQ999QQ C:\r.txt    -> escribe "DV=99" y sale (exit 0 / 2)
+dv-caba-portable.exe --copy 99           -> copia al portapapeles (exit 0 / 2)
 ```
 
 ## Verificación
@@ -58,12 +76,18 @@ Comparar con `SHA256SUMS.txt`. Para reconstruir desde la fuente hace falta
 iscc.exe fuente\dv-caba.iss
 ```
 
+Para correr la batería completa:
+
+```bash
+node fuente/test-paridad.js
+```
+
 ## Sobre el antivirus
 
 Algunos antivirus señalan binarios desconocidos y sin firmar (heurística en la
 nube, p. ej. `Artemis!`). Es un **falso positivo** típico: el binario no hace
-red, no ejecuta procesos y no instala nada. Podés verificar el hash y
-reconstruir el ejecutable desde `fuente/`.
+red, no invoca `cmd`/`powershell` para el cálculo y no instala nada. Podés
+verificar el hash y reconstruir el ejecutable desde `fuente/`.
 
 No subas el archivo a VirusTotal antes de pedir la revisión al fabricante: VT
 comparte las muestras y puede consolidar la detección.

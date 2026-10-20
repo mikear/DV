@@ -11,8 +11,10 @@ Ciudad Autónoma de Buenos Aires.
   `aaf9d4072b685fd5606d182d68fec8ec7cf99c12c28f89ee3bad2f59dbe0954e`
 - **Implementación propia**: `dv.js` (reescritura limpia, no copia del original).
 - **Verificación**: `test-paridad.js` compara ambas implementaciones en
-  **432 casos / 1282 comprobaciones** y da OK. El `.exe` repite esa misma batería
-  como autotest interno antes de abrir la ventana.
+  **432 casos / 1282 comprobaciones** y da OK (con los vectores dorados del
+  paquete público, la misma batería aporta 432 comprobaciones). El `.exe`
+  ejecuta además un autotest de humo —todas las letras y casos negativos— antes
+  de abrir la GUI y antes del modo archivo.
 
 ## 1. Formatos de dominio aceptados
 
@@ -130,7 +132,7 @@ verificación numérica por paridad, no en un trazado dinámico.
 ```bash
 node dv.js QQ999QQ          # => DV: 99
 node dv.js QQ999QQ AB123CD ABC123
-node test-paridad.js        # 432 casos / 1282 comprobaciones
+node test-paridad.js        # 432 casos: 1282 checks con el original, 432 con dorados
 ```
 
 `test-paridad.js` corre en dos modos:
@@ -147,5 +149,6 @@ node test-paridad.js --dump-golden > golden.json
 node tools/embed-golden.js embed
 ```
 
-El `.exe` portátil ejecuta internamente la misma batería (autotest) y se niega a
-mostrar la GUI si algún vector falla.
+El `.exe` portátil ejecuta un autotest de humo (las 26 letras y casos
+negativos) antes de abrir la GUI y antes del modo archivo; la batería completa
+de 432 casos es la de `test-paridad.js`.

@@ -3,7 +3,8 @@
 ## Alcance de la respuesta
 
 Este proyecto es una herramienta de escritorio que calcula un valor localmente.
-No usa red, no almacena datos y no tiene superficie de ataque remota.
+No usa red propia, no almacena datos y no tiene superficie de ataque remota. El
+enlace del pie abre el navegador sólo cuando lo clickeás.
 
 Aun así, se agradecen reportes sobre:
 
@@ -11,6 +12,12 @@ Aun así, se agradecen reportes sobre:
   procesos, escritura fuera de su directorio temporal).
 - Problemas de integridad entre el binario publicado y el código fuente.
 - Dependencias o mecanismos de compilación que puedan comprometer el artefacto.
+
+Comportamientos esperados que **no** son vulnerabilidades:
+
+- El loader de Inno ejecuta una copia temporal del propio binario.
+- El modo CLI escribe únicamente el archivo de salida que se le indica.
+- El enlace inferior abre el navegador a pedido (no hay red propia).
 
 **No** se consideran vulnerabilidades:
 
@@ -26,7 +33,8 @@ Aun así, se agradecen reportes sobre:
 Por favor **no abras un issue público** para vulnerabilidades.
 
 Usá [Report a vulnerability](https://github.com/mikear/DV/security/advisories/new)
-de GitHub Security Advisories, o contactá al mainter de forma privada.
+de GitHub Security Advisories, o contactá a quien mantiene el proyecto de forma
+privada.
 
 Incluí:
 
@@ -43,4 +51,5 @@ Incluí:
 | 14 días | Corrección publicada en una nueva release. |
 
 Si el reporte implica integridad del binario, se recomienda reconstruirlo desde
-`fuente/dv-caba.iss` y comparar hashes antes de confiar en la build publicada.
+`dv-caba.iss` (en el paquete, `fuente/dv-caba.iss` con `fuente/iconos/`) y
+comparar hashes antes de confiar en la build publicada.
