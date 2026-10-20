@@ -7,12 +7,25 @@ y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Interfaz
+
+- **Jerarquía de acciones**: `Calcular` es la acción principal (negrita y más
+  grande); el resultado se muestra centrado y con mayor tamaño.
+- **Copia simplificada**: se quitó el icono duplicado del resultado y `Copiar
+  resultado` permanece deshabilitado hasta que hay un DV.
+- **Validación junto al campo**: los estados y errores aparecen debajo del
+  dominio; al corregir, el foco vuelve al campo y el resultado anterior se limpia.
+- **Textos y legibilidad**: tildes y voseo consistentes, textos secundarios de
+  9 pt con más contraste, y aviso de herramienta no oficial/cálculo local más
+  visible.
+
 ### Documentación
 
 - README reorganizado con llamada a la descarga, badges de CI y plataforma,
   preguntas frecuentes y sección de autoría.
 - Vista previa social del repositorio en `docs/social-preview.png`.
 - Descripción, topics y Discussions del repositorio actualizados.
+- Captura de la app actualizada en `docs/screenshot.png`.
 
 ## [1.0.2] - 2026-10-20
 

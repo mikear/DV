@@ -1,5 +1,5 @@
 ﻿; ============================================================================
-;  dv-caba.iss - Calculadora PORTABLE del DIGITO VERIFICADOR de patentes CABA
+;  dv-caba.iss - Calculadora PORTABLE del DÍGITO VERIFICADOR de patentes CABA
 ;  Sitio objetivo: https://lb.agip.gob.ar/ConsultaPat/
 ;
 ;  Esto NO es un instalador: el binario nunca muestra el asistente de Inno.
@@ -14,7 +14,7 @@
 ;             modo archivo; la bateria completa queda en test-paridad.js.
 ;
 ;  Autoria: mikear - https://github.com/mikear/DV
-;  Herramienta NO oficial, sin afiliacion con AGIP. Ver DISCLAIMER.md.
+;  Herramienta NO oficial, sin afiliación con AGIP. Ver DISCLAIMER.md.
 ;
 ;  El binario NO invoca cmd ni powershell para calcular ni para el
 ;  portapapeles: usa API nativa de Win32 (user32/kernel32) y el enlace del
@@ -46,7 +46,7 @@ VersionInfoVersion={#AppVersion}
 VersionInfoProductVersion={#AppVersion}
 VersionInfoTextVersion={#AppVersion}
 VersionInfoCompany={#Autor}
-VersionInfoDescription=Calculadora portable del digito verificador de patentes CABA
+VersionInfoDescription=Calculadora portable del dígito verificador de patentes CABA
 VersionInfoProductName={#AppName}
 VersionInfoOriginalFileName={#OutputName}-portable.exe
 VersionInfoCopyright=Copyright (C) 2026 {#Autor} - {#RepoURL} - Herramienta no oficial
@@ -83,6 +83,8 @@ const
   CODIGOS = '1401001605201909240721080413252218100206122311031517';
   CF_UNICODETEXT = 13;
   GMEM_MOVEABLE = $0002;
+  GWL_STYLE = -16;
+  ES_CENTER = $0001;
 
   { glifos Segoe MDL2 Assets (NO son emojis) - literales anchos, ya que
     Chr() trunca al byte bajo y produce caracteres incorrectos }
@@ -96,7 +98,7 @@ var
   AppForm: TForm;
   Acento, IconoApp: TBitmapImage;
   LblSec1, LblSec2, LblSec3: TNewStaticText;
-  LblCopiarIcon, LblCopiarDom, LblLinkIcon, LblEstadoIcon: TNewStaticText;
+  LblCopiarDom, LblLinkIcon, LblEstadoIcon: TNewStaticText;
   LblEstado, LblLink, LblAyuda, LblAviso: TNewStaticText;
   LblAutorIcon, LblAutor: TNewStaticText;
   EdtDominio, EdtResultado: TNewEdit;
@@ -109,6 +111,15 @@ var
 
 function GetDpiForWindow(AWnd: Integer): Integer;
   external 'GetDpiForWindow@user32.dll stdcall';
+
+function GetWindowLong(AWnd, AIndex: Integer): Longint;
+  external 'GetWindowLongW@user32.dll stdcall';
+
+function SetWindowLong(AWnd, AIndex: Integer; ANewLong: Longint): Longint;
+  external 'SetWindowLongW@user32.dll stdcall';
+
+function HideCaret(AWnd: Integer): Integer;
+  external 'HideCaret@user32.dll stdcall';
 
 function OpenClipboard(AWnd: Integer): Integer;
   external 'OpenClipboard@user32.dll stdcall';
@@ -310,11 +321,11 @@ begin
 
   Pat := UpperCase(Dominio);
   if Pat = '' then begin
-    Err := 'Debe especificar el dominio a consultar.';
+    Err := 'Ingresá el dominio a consultar.';
     Exit;
   end;
   if not FormatoValido(Pat) then begin
-    Err := 'El dominio no tiene un formato valido (6, 7 u 8 caracteres).';
+    Err := 'El dominio no tiene un formato válido (6, 7 u 8 caracteres).';
     Exit;
   end;
 
@@ -340,7 +351,7 @@ begin
       Pat := ReplaceFirst(Pat, ' ', '60');
 
   if not TieneRachaDe9Digitos(Pat) then begin
-    Err := 'No es valida la patente ingresada.';
+    Err := 'No es válida la patente ingresada.';
     Exit;
   end;
 
@@ -353,7 +364,7 @@ begin
       { El JS original entraria en bucle infinito aca (parseInt('A')=NaN y el
         while de raiz digital nunca termina). El sitio tampoco llega porque
         valido() corrio antes; aca se reporta error en vez de colgar. }
-      Err := 'No es valida la patente ingresada.';
+      Err := 'No es válida la patente ingresada.';
       Exit;
     end;
     if (I - 1) mod 2 = 0 then
@@ -485,7 +496,7 @@ begin
     LblEstado.Font.Color := RGB(190, 24, 93);
   end else begin
     LblEstadoIcon.Caption := '';
-    LblEstado.Font.Color := RGB(100, 116, 139);
+    LblEstado.Font.Color := RGB(71, 85, 105);
   end;
   LblEstado.Caption := Txt;
 end;
@@ -499,11 +510,16 @@ begin
   if CalcularDV(EdtDominio.Text, N, Err) then begin
     DV := IntToStr(N);
     EdtResultado.Text := DV;
-    SetEstado('Formato valido: copia "' + DV + '" en el campo del sitio AGIP.', 1);
+    BtnCopiar.Enabled := True;
+    SetEstado('Formato válido: copiá "' + DV + '" en el sitio de AGIP.', 1);
+    AppForm.ActiveControl := EdtResultado;
     EdtResultado.SelectAll;
+    HideCaret(EdtResultado.Handle);
   end else begin
     EdtResultado.Text := '';
+    BtnCopiar.Enabled := False;
     SetEstado(Err, 2);
+    AppForm.ActiveControl := EdtDominio;
   end;
 end;
 
@@ -513,13 +529,13 @@ var
 begin
   DV := Trim(EdtResultado.Text);
   if DV = '' then begin
-    SetEstado('Todavia no hay resultado: calcula primero el dominio.', 2);
+    SetEstado('Todavía no hay resultado: calculá primero el dominio.', 2);
     Exit;
   end;
   if CopiarPortapapeles(DV) then
     SetEstado('Copiado al portapapeles: ' + DV, 1)
   else
-    SetEstado('No se pudo copiar. Usa el valor a mano.', 2);
+    SetEstado('No se pudo copiar. Usá el valor a mano.', 2);
 end;
 
 function AbrirURL(const URL: String): Boolean;
@@ -552,7 +568,7 @@ var
 begin
   Dom := UpperCase(Trim(EdtDominio.Text));
   if Dom = '' then begin
-    SetEstado('Todavia no hay dominio para copiar.', 2);
+    SetEstado('Todavía no hay dominio para copiar.', 2);
     Exit;
   end;
   if CopiarPortapapeles(Dom) then
@@ -563,10 +579,12 @@ end;
 
 procedure DominioChange(Sender: TObject);
 begin
-  { Al editar el dominio, el DV anterior deja de ser valido. }
+  { Al editar el dominio, el DV anterior deja de ser válido. }
   if EdtResultado <> nil then
     EdtResultado.Text := '';
-  SetEstado('Escribe el dominio y apreta Calcular.', 0);
+  if BtnCopiar <> nil then
+    BtnCopiar.Enabled := False;
+  SetEstado('Escribí el dominio y apretá Calcular.', 0);
 end;
 
 procedure LayoutApp;
@@ -588,15 +606,15 @@ begin
   EdtDominio.Left := M;
   EdtDominio.Top := Sc(36);
   EdtDominio.Width := Sc(230);
-  EdtDominio.Height := Sc(28);
+  EdtDominio.Height := Sc(30);
 
   LblCopiarDom.Left := M + Sc(238);
-  LblCopiarDom.Top := Sc(43);
+  LblCopiarDom.Top := Sc(44);
 
   BtnCalcular.Left := M + Sc(266);
   BtnCalcular.Top := Sc(36);
-  BtnCalcular.Width := Sc(130);
-  BtnCalcular.Height := Sc(28);
+  BtnCalcular.Width := Sc(140);
+  BtnCalcular.Height := Sc(30);
 
   IconoApp.Left := W - M - Sc(56);
   IconoApp.Top := Sc(14);
@@ -604,62 +622,59 @@ begin
   IconoApp.Height := Sc(56);
 
   LblSec2.Left := M;
-  LblSec2.Top := Sc(84);
+  LblSec2.Top := Sc(106);
 
   EdtResultado.Left := M;
-  EdtResultado.Top := Sc(102);
-  EdtResultado.Width := Sc(180);
-  EdtResultado.Height := Sc(50);
+  EdtResultado.Top := Sc(124);
+  EdtResultado.Width := Sc(210);
+  EdtResultado.Height := Sc(52);
 
-  LblCopiarIcon.Left := M + Sc(186);
-  LblCopiarIcon.Top := Sc(117);
-
-  BtnCopiar.Left := M + Sc(214);
-  BtnCopiar.Top := Sc(112);
+  BtnCopiar.Left := M + Sc(218);
+  BtnCopiar.Top := Sc(134);
   BtnCopiar.Width := Sc(150);
-  BtnCopiar.Height := Sc(30);
+  BtnCopiar.Height := Sc(32);
 
   LblEstadoIcon.Left := M;
-  LblEstadoIcon.Top := Sc(164);
+  LblEstadoIcon.Top := Sc(75);
 
   LblEstado.Left := M + Sc(24);
-  LblEstado.Top := Sc(162);
+  LblEstado.Top := Sc(72);
   LblEstado.Width := W - 2 * M - Sc(24);
-  LblEstado.Height := Sc(34);
+  LblEstado.Height := Sc(28);
 
   LblSec3.Left := M;
-  LblSec3.Top := Sc(206);
+  LblSec3.Top := Sc(196);
 
   LblLinkIcon.Left := M;
-  LblLinkIcon.Top := Sc(225);
+  LblLinkIcon.Top := Sc(215);
 
   LblLink.Left := M + Sc(24);
-  LblLink.Top := Sc(223);
+  LblLink.Top := Sc(213);
   LblLink.Width := W - 2 * M - Sc(24);
   LblLink.Height := Sc(20);
 
   LblAyuda.Left := M;
-  LblAyuda.Top := Sc(252);
+  LblAyuda.Top := Sc(240);
   LblAyuda.Width := W - 2 * M;
-  LblAyuda.Height := Sc(34);
+  LblAyuda.Height := Sc(36);
 
   LblAviso.Left := M;
-  LblAviso.Top := Sc(298);
-  LblAviso.Width := W - 2 * M - Sc(140);
-  LblAviso.Height := Sc(32);
+  LblAviso.Top := Sc(284);
+  LblAviso.Width := W - 2 * M - Sc(100);
+  LblAviso.Height := Sc(36);
 
   LblAutorIcon.Left := M;
-  LblAutorIcon.Top := Sc(343);
+  LblAutorIcon.Top := Sc(329);
 
   LblAutor.Left := M + Sc(24);
-  LblAutor.Top := Sc(341);
-  LblAutor.Width := W - 2 * M - Sc(24) - Sc(140);
+  LblAutor.Top := Sc(327);
+  LblAutor.Width := W - 2 * M - Sc(24) - Sc(100);
   LblAutor.Height := Sc(20);
 
-  BtnCerrar.Left := W - M - Sc(124);
-  BtnCerrar.Top := Sc(334);
-  BtnCerrar.Width := Sc(124);
-  BtnCerrar.Height := Sc(30);
+  BtnCerrar.Left := W - M - Sc(90);
+  BtnCerrar.Top := Sc(322);
+  BtnCerrar.Width := Sc(90);
+  BtnCerrar.Height := Sc(26);
 end;
 
 procedure ConstruirUI;
@@ -676,7 +691,7 @@ begin
   if Dpi <= 0 then Dpi := 96;
 
   AppForm.ClientWidth := Sc(500);
-  AppForm.ClientHeight := Sc(376);
+  AppForm.ClientHeight := Sc(362);
 
   ExtractTemporaryFile('preview-64.png');
   ExtractTemporaryFile('accent-teal.png');
@@ -703,20 +718,23 @@ begin
   EdtDominio := TNewEdit.Create(AppForm);
   EdtDominio.Parent := AppForm;
   EdtDominio.MaxLength := 16;
+  EdtDominio.Font.Size := 10;
   EdtDominio.Text := '';
 
   BtnCalcular := TNewButton.Create(AppForm);
   BtnCalcular.Parent := AppForm;
   BtnCalcular.Caption := 'Calcular';
+  BtnCalcular.Font.Size := 10;
+  BtnCalcular.Font.Style := [fsBold];
   BtnCalcular.Default := True;
   BtnCalcular.OnClick := @CalcularClick;
 
   LblCopiarDom := TNewStaticText.Create(AppForm);
   LblCopiarDom.Parent := AppForm;
-  LblCopiarDom.Caption := GLIFO_COPIAR;   { mismo icono que el de abajo }
+  LblCopiarDom.Caption := GLIFO_COPIAR;   { icono de copiar }
   LblCopiarDom.Font.Name := 'Segoe MDL2 Assets';
   LblCopiarDom.Font.Size := 11;
-  LblCopiarDom.Font.Color := RGB(100, 116, 139);
+  LblCopiarDom.Font.Color := RGB(71, 85, 105);
   LblCopiarDom.AutoSize := True;
   LblCopiarDom.Cursor := crHand;
   LblCopiarDom.Hint := 'Copiar dominio';
@@ -725,7 +743,7 @@ begin
 
   LblSec2 := TNewStaticText.Create(AppForm);
   LblSec2.Parent := AppForm;
-  LblSec2.Caption := 'DIGITO VERIFICADOR';
+  LblSec2.Caption := 'DÍGITO VERIFICADOR';
   LblSec2.Font.Size := 8;
   LblSec2.Font.Style := [fsBold];
   LblSec2.Font.Color := RGB(15, 118, 110);
@@ -733,27 +751,19 @@ begin
   EdtResultado := TNewEdit.Create(AppForm);
   EdtResultado.Parent := AppForm;
   EdtResultado.ReadOnly := True;
+  SetWindowLong(EdtResultado.Handle, GWL_STYLE,
+    GetWindowLong(EdtResultado.Handle, GWL_STYLE) or ES_CENTER);
   EdtResultado.Font.Name := 'Segoe UI';
-  EdtResultado.Font.Size := 22;
+  EdtResultado.Font.Size := 26;
   EdtResultado.Font.Style := [fsBold];
   EdtResultado.Font.Color := RGB(15, 118, 110);
   EdtResultado.Color := RGB(240, 253, 250);
   EdtResultado.Text := '';
 
-  LblCopiarIcon := TNewStaticText.Create(AppForm);
-  LblCopiarIcon.Parent := AppForm;
-  LblCopiarIcon.Caption := GLIFO_COPIAR;
-  LblCopiarIcon.Font.Name := 'Segoe MDL2 Assets';
-  LblCopiarIcon.Font.Size := 11;
-  LblCopiarIcon.Font.Color := RGB(100, 116, 139);
-  LblCopiarIcon.Cursor := crHandPoint;
-  LblCopiarIcon.Hint := 'Copiar resultado';
-  LblCopiarIcon.ShowHint := True;
-  LblCopiarIcon.OnClick := @CopiarClick;
-
   BtnCopiar := TNewButton.Create(AppForm);
   BtnCopiar.Parent := AppForm;
   BtnCopiar.Caption := 'Copiar resultado';
+  BtnCopiar.Enabled := False;
   BtnCopiar.OnClick := @CopiarClick;
 
   LblEstadoIcon := TNewStaticText.Create(AppForm);
@@ -766,11 +776,11 @@ begin
   LblEstado.Parent := AppForm;
   LblEstado.AutoSize := False;
   LblEstado.WordWrap := True;
-  LblEstado.Font.Size := 8;
+  LblEstado.Font.Size := 9;
 
   LblSec3 := TNewStaticText.Create(AppForm);
   LblSec3.Parent := AppForm;
-  LblSec3.Caption := 'USALO EN EL SITIO';
+  LblSec3.Caption := 'CÓMO USARLO EN EL SITIO';
   LblSec3.Font.Size := 8;
   LblSec3.Font.Style := [fsBold];
   LblSec3.Font.Color := RGB(15, 118, 110);
@@ -782,18 +792,18 @@ begin
   LblLinkIcon.Font.Size := 11;
   LblLinkIcon.Font.Color := RGB(15, 118, 110);
   LblLinkIcon.Cursor := crHandPoint;
-  LblLinkIcon.Hint := 'Abrir el sitio de AGIP';
+  LblLinkIcon.Hint := 'Abrir el sitio de AGIP (lb.agip.gob.ar/ConsultaPat/)';
   LblLinkIcon.ShowHint := True;
   LblLinkIcon.OnClick := @AbrirSitio;
 
   LblLink := TNewStaticText.Create(AppForm);
   LblLink.Parent := AppForm;
-  LblLink.Caption := 'Abrir lb.agip.gob.ar/ConsultaPat/';
+  LblLink.Caption := 'Abrir sitio de AGIP';
   LblLink.Font.Size := 9;
   LblLink.Font.Style := [fsBold, fsUnderline];
   LblLink.Font.Color := RGB(15, 118, 110);
   LblLink.Cursor := crHandPoint;
-  LblLink.Hint := 'Abrir el sitio de AGIP';
+  LblLink.Hint := 'Abrir el sitio de AGIP (lb.agip.gob.ar/ConsultaPat/)';
   LblLink.ShowHint := True;
   LblLink.OnClick := @AbrirSitio;
 
@@ -801,20 +811,19 @@ begin
   LblAyuda.Parent := AppForm;
   LblAyuda.AutoSize := False;
   LblAyuda.WordWrap := True;
-  LblAyuda.Font.Size := 8;
-  LblAyuda.Font.Color := RGB(100, 116, 139);
-  LblAyuda.Caption := 'En el sitio: tilda "Cuento con el digito verificador" ' +
-    'y pega el valor.' + #13#10 +
-    'Si el sitio pide reingresar el dominio, no tildes la casilla.';
+  LblAyuda.Font.Size := 9;
+  LblAyuda.Font.Color := RGB(71, 85, 105);
+  LblAyuda.Caption := 'En el sitio, marcá "Cuento con el dígito verificador" ' +
+    'y pegá el DV.' + #13#10 + 'Si te pide el dominio de nuevo, destildá la casilla.';
 
   LblAviso := TNewStaticText.Create(AppForm);
   LblAviso.Parent := AppForm;
   LblAviso.AutoSize := False;
   LblAviso.WordWrap := True;
-  LblAviso.Font.Size := 8;
-  LblAviso.Font.Color := RGB(100, 116, 139);
-  LblAviso.Caption := 'Herramienta no oficial, sin afiliacion con AGIP. ' +
-    'El DV es informativo. Uso responsable de los datos.';
+  LblAviso.Font.Size := 9;
+  LblAviso.Font.Color := RGB(71, 85, 105);
+  LblAviso.Caption := 'No oficial, sin afiliación con AGIP. Cálculo local. ' +
+    'El DV es informativo; usalo con fines lícitos.';
 
   LblAutorIcon := TNewStaticText.Create(AppForm);
   LblAutorIcon.Parent := AppForm;
@@ -830,7 +839,7 @@ begin
 
   LblAutor := TNewStaticText.Create(AppForm);
   LblAutor.Parent := AppForm;
-  LblAutor.Caption := 'Hecho por {#Autor} - github.com/{#Autor}/DV';
+  LblAutor.Caption := 'Hecho por {#Autor} · github.com/{#Autor}/DV';
   LblAutor.Font.Size := 9;
   LblAutor.Font.Style := [fsBold, fsUnderline];
   LblAutor.Font.Color := RGB(15, 118, 110);
@@ -845,7 +854,7 @@ begin
   BtnCerrar.Cancel := True;
   BtnCerrar.OnClick := @CerrarClick;
 
-  SetEstado('Escribe el dominio y apreta Calcular.', 0);
+  SetEstado('Ingresá el dominio y apretá Calcular. Ej: AB123CD.', 0);
 
   EdtDominio.OnChange := @DominioChange;
   AppForm.ActiveControl := EdtDominio;
