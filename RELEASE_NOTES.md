@@ -1,4 +1,4 @@
-# DV Patentes CABA v1.0.2
+# DV Patentes CABA v1.0.3
 
 <img src="https://raw.githubusercontent.com/mikear/DV/main/docs/screenshot.png" alt="Aplicación calculando el dígito verificador de AB123CD" width="560">
 
@@ -10,6 +10,27 @@ Hecha por **[mikear](https://github.com/mikear/DV)**. Código fuente:
 <https://github.com/mikear/DV>.
 
 **No oficial. Sin afiliación con AGIP.** Ver `DISCLAIMER.md`.
+
+## Cambios de 1.0.3
+
+### Interfaz
+
+- **Calcular como acción principal**: más grande y en negrita.
+- **Resultado protagonista**: el DV se muestra centrado y con mayor tamaño.
+- **Copia simplificada**: se quitó el icono duplicado del resultado y
+  `Copiar resultado` se habilita recién cuando hay un DV.
+- **Validación junto al campo**: los estados y errores aparecen debajo del
+  dominio; si el formato es inválido, el foco vuelve al campo.
+- **Textos y legibilidad**: tildes y voseo consistentes, textos secundarios de
+  9 pt con más contraste, y aviso de herramienta no oficial y cálculo local más
+  visible.
+- **Enlaces más claros**: el acceso al sitio de AGIP muestra una etiqueta corta
+  y la URL completa queda en el tooltip.
+
+### Documentación
+
+- README y captura de la app actualizados.
+- Changelog con las novedades de la versión.
 
 ## Cambios de 1.0.2
 

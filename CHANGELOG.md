@@ -7,6 +7,8 @@ y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-20
+
 ### Interfaz
 
 - **Jerarquía de acciones**: `Calcular` es la acción principal (negrita y más
