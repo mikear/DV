@@ -7,6 +7,13 @@ y este proyecto adhería a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-10-29
+
+### Cambios
+
+- Actualización de capturas de documentación (screenshot y social preview) para
+  v1.1.1; sin cambios en el algoritmo ni en el binario.
+
 ## [1.1.1] - 2026-10-20
 
 ### Arreglado

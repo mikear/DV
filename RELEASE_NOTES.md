@@ -1,4 +1,4 @@
-# DV Patentes CABA v1.1.1
+# DV Patentes CABA v1.1.2
 
 <img src="https://raw.githubusercontent.com/mikear/DV/main/docs/screenshot.png" alt="Aplicación calculando el dígito verificador de AB123CD con la chapa del dominio dibujada" width="560">
 
@@ -10,6 +10,13 @@ Hecha por **[mikear](https://github.com/mikear/DV)**. Código fuente:
 <https://github.com/mikear/DV>.
 
 **No oficial. Sin afiliación con AGIP.** Ver `DISCLAIMER.md`.
+
+## Novedades de 1.1.2
+
+### Documentación
+
+- Actualización de capturas (screenshot y social preview) para v1.1.1. Sin
+  cambios en el algoritmo ni en el binario.
 
 ## Novedades de 1.1.1
 

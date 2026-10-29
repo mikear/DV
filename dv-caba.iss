@@ -28,7 +28,7 @@
 ; ============================================================================
 
 #define AppName "DV Patentes CABA"
-#define AppVersion "1.1.1"
+#define AppVersion "1.1.2"
 #define OutputName "dv-caba"
 #define Autor "mikear"
 #define RepoURL "https://github.com/mikear/DV"
